@@ -1,3 +1,4 @@
+[![release](https://github.com/aidanmelen/terraform-provider-snowsql/actions/workflows/release.yml/badge.svg)](https://github.com/aidanmelen/terraform-provider-snowsql/actions/workflows/release.yml)
 # Terraform Provider SnowSQL
 
 The Terraform SnowSQL provider allows for the management of the `create` and `delete` lifecycles for [Snowflake](https://www.snowflake.com) objects with [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql.html).

@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/rsa"
 	"database/sql"
+	"encoding/pem"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,6 +13,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/snowflakedb/gosnowflake"
+	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -56,6 +59,21 @@ func Provider() *schema.Provider {
 				Sensitive:     true,
 				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token"},
 			},
+			"private_key": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "private_key_path"},
+			},
+			"private_key_passphrase": {
+				Type:          schema.TypeString,
+				Description:   "Supports the encryption ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc",
+				Optional:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE", nil),
+				Sensitive:     true,
+				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token"},
+			},
 			"role": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -82,13 +100,15 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	password := d.Get("password").(string)
 	browserAuth := d.Get("browser_auth").(bool)
 	privateKeyPath := d.Get("private_key_path").(string)
+	privateKey := d.Get("private_key").(string)
+	privateKeyPassphrase := d.Get("private_key_passphrase").(string)
 	oauthAccessToken := d.Get("oauth_access_token").(string)
 	region := d.Get("region").(string)
 	role := d.Get("role").(string)
 
 	var diags diag.Diagnostics
 
-	dsn, err := DSN(account, user, password, browserAuth, privateKeyPath, oauthAccessToken, region, role)
+	dsn, err := DSN(account, user, password, browserAuth, privateKeyPath, privateKey, privateKeyPassphrase, oauthAccessToken, region, role)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -117,6 +137,8 @@ func DSN(
 	password string,
 	browserAuth bool,
 	privateKeyPath,
+	privateKey,
+	privateKeyPassphrase,
 	oauthAccessToken,
 	region,
 	role string) (string, error) {
@@ -136,14 +158,23 @@ func DSN(
 	}
 
 	if privateKeyPath != "" {
-
-		rsaPrivateKey, err := ParsePrivateKey(privateKeyPath)
+		privateKeyBytes, err := ReadPrivateKeyFile(privateKeyPath)
+		if err != nil {
+			return "", errors.Wrap(err, "Private Key file could not be read")
+		}
+		rsaPrivateKey, err := ParsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
 		if err != nil {
 			return "", errors.Wrap(err, "Private Key could not be parsed")
 		}
 		config.PrivateKey = rsaPrivateKey
 		config.Authenticator = gosnowflake.AuthTypeJwt
-
+	} else if privateKey != "" {
+		rsaPrivateKey, err := ParsePrivateKey([]byte(privateKey), []byte(privateKeyPassphrase))
+		if err != nil {
+			return "", errors.Wrap(err, "Private Key could not be parsed")
+		}
+		config.PrivateKey = rsaPrivateKey
+		config.Authenticator = gosnowflake.AuthTypeJwt
 	} else if browserAuth {
 		config.Authenticator = gosnowflake.AuthTypeExternalBrowser
 	} else if oauthAccessToken != "" {
@@ -159,18 +190,24 @@ func DSN(
 }
 
 // ParsePrivateKey reads and parses an RSA Private Key.
-func ParsePrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
-	expandedPrivateKeyPath, err := homedir.Expand(privateKeyPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "Invalid Path to private key")
+func ParsePrivateKey(privateKeyBytes []byte, passphrase []byte) (*rsa.PrivateKey, error) {
+	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
+	if privateKeyBlock == nil {
+		return nil, fmt.Errorf("Could not parse private key, key is not in PEM format")
 	}
 
-	privateKeyBytes, err := ioutil.ReadFile(expandedPrivateKeyPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not read private key")
-	}
-	if len(privateKeyBytes) == 0 {
-		return nil, errors.New("Private key is empty")
+	if privateKeyBlock.Type == "ENCRYPTED PRIVATE KEY" {
+		if len(passphrase) == 0 {
+			return nil, fmt.Errorf("Private key requires a passphrase, but private_key_passphrase was not supplied")
+		}
+		privateKey, err := pkcs8.ParsePKCS8PrivateKeyRSA(privateKeyBlock.Bytes, passphrase)
+		if err != nil {
+			return nil, errors.Wrap(
+				err,
+				"Could not parse encrypted private key with passphrase, only ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc are supported",
+			)
+		}
+		return privateKey, nil
 	}
 
 	privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
@@ -183,4 +220,23 @@ func ParsePrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
 		return nil, errors.New("privateKey not of type RSA")
 	}
 	return rsaPrivateKey, nil
+}
+
+
+func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
+	expandedPrivateKeyPath, err := homedir.Expand(privateKeyPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "Invalid Path to private key")
+	}
+
+	privateKeyBytes, err := ioutil.ReadFile(expandedPrivateKeyPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "Could not read private key")
+	}
+
+	if len(privateKeyBytes) == 0 {
+		return nil, errors.New("Private key is empty")
+	}
+
+	return privateKeyBytes, nil
 }

@@ -38,3 +38,6 @@ override.tf.json
 .terraformrc
 terraform.rc
 terraform
+
+# Ignore idea folders and files
+.idea/

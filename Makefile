@@ -1,8 +1,9 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
+REGISTRY=registry.terraform.io
 HOSTNAME=aidanmelen
 NAME=snowsql
 BINARY=terraform-provider-${NAME}
-VERSION=0.1.0
+VERSION=0.2.0
 OS_ARCH=darwin_amd64
 
 default: install
@@ -16,11 +17,8 @@ clean: ## clean the repo
 	rm -rf dist
 
 install: build
-	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAME}/${VERSION}/${OS_ARCH}
-	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAME}/${VERSION}/${OS_ARCH}
-
-pre-release:
-	goreleaser --snapshot --skip-publish --rm-dist
+	mkdir -p ~/.terraform.d/plugins/${REGISTRY}/${HOSTNAME}/${NAME}/${VERSION}/${OS_ARCH}
+	mv ${BINARY} ~/.terraform.d/plugins/${REGISTRY}/${HOSTNAME}/${NAME}/${VERSION}/${OS_ARCH}
 
 pre-commit:
 	git init

@@ -4,11 +4,11 @@ terraform {
   required_providers {
     snowflake = {
       source  = "chanzuckerberg/snowflake"
-      version = ">= v0.25.18"
+      version = ">= 0.25.18"
     }
     snowsql = {
       source  = "aidanmelen/snowsql"
-      version = ">= 0.1.0"
+      version = ">= 0.2.0"
     }
     random = ">= 2.1"
   }

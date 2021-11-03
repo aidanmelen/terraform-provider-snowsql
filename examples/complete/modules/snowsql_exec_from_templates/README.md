@@ -25,13 +25,13 @@ workspace-root
 | Name | Version |
 |------|---------|
 | terraform | >= 0.12.9 |
-| snowsql | >= 0.1.0 |
+| snowsql | >= 0.2.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| snowsql | >= 0.1.0 |
+| snowsql | >= 0.2.0 |
 | template | n/a |
 
 ## Inputs
@@ -40,7 +40,7 @@ workspace-root
 |------|-------------|------|---------|:--------:|
 | name | The name of the directory containing the create and delete SnowSQL templates. | `string` | n/a | yes |
 | sql\_path | The relative path to the `sql` directory containing the SnowSQL create and delete SnowSQL templates. Defaults to the `sql` directory in the root of your Terraform workspace. | `string` | `null` | no |
-| template\_vars | The variables used to render the create and delete SnowSQL templates. This map will be passed to the [template\_file](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file#vars) data resource. | `map` | n/a | yes |
+| template\_vars | The variables used to render the create and delete SnowSQL templates. This map will be passed to the [template\_file](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file#vars) data resource. | `map(any)` | n/a | yes |
 
 ## Outputs
 

@@ -31,10 +31,10 @@ builds:
   ignore:
     - goos: darwin
       goarch: '386'
-    - goos: darwin
-      goarch: 'amd64'
-    - goos: windows
-      goarch: '386'
+    # - goos: darwin
+    #   goarch: 'amd64'
+    # - goos: windows
+    #   goarch: '386'
   binary: '{{ .ProjectName }}_v{{ .Version }}'
 archives:
 - format: zip

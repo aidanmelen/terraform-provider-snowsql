@@ -21,16 +21,16 @@ Note that this example may create resources which can cost money (Warehouse, Dat
 |------|---------|
 | terraform | >= 0.13.0 |
 | random | >= 2.1 |
-| snowflake | >= v0.25.18 |
-| snowsql | >= 0.1.0 |
+| snowflake | >= 0.25.18 |
+| snowsql | >= 0.2.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | random | >= 2.1 |
-| snowflake | >= v0.25.18 |
-| snowsql | >= 0.1.0 |
+| snowflake | >= 0.25.18 |
+| snowsql | >= 0.2.0 |
 
 ## Inputs
 

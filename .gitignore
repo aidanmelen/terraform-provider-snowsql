@@ -41,4 +41,4 @@ terraform
 .terraform.lock.hcl
 
 # Ignore idea folders and files
-.idea/ 
+.idea/

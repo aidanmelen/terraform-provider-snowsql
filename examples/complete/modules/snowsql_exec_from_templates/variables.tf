@@ -11,5 +11,5 @@ variable "sql_path" {
 
 variable "template_vars" {
   description = "The variables used to render the create and delete SnowSQL templates. This map will be passed to the [template_file](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file#vars) data resource."
-  type        = map
+  type        = map(any)
 }

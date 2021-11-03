@@ -137,6 +137,7 @@ func Provider() *schema.Provider {
 	}
 }
 
+//ConfigureProvider returns an authenticated Snowflake connection.
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	account := s.Get("account").(string)
 	user := s.Get("username").(string)
@@ -186,6 +187,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	return db, nil
 }
 
+// DSN returns a Snowflake Data Source Name used to authenticate the provider.
 func DSN(
 	account,
 	user,
@@ -243,6 +245,7 @@ func DSN(
 	return gosnowflake.DSN(&config)
 }
 
+// ReadPrivateKeyFile returns a Private Key bytes
 func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 	expandedPrivateKeyPath, err := homedir.Expand(privateKeyPath)
 	if err != nil {
@@ -261,6 +264,7 @@ func ReadPrivateKeyFile(privateKeyPath string) ([]byte, error) {
 	return privateKeyBytes, nil
 }
 
+// ParsePrivateKey returns a Private Key File
 func ParsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey, error) {
 	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
 	if privateKeyBlock == nil {
@@ -293,39 +297,43 @@ func ParsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey,
 	return rsaPrivateKey, nil
 }
 
+// Result is a struct
 type Result struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-func GetOauthData(refreshToken, redirectUrl string) url.Values {
+// GetOauthData returns Oauth Data
+func GetOauthData(refreshToken, redirectURL string) url.Values {
 	data := url.Values{}
 	data.Set("grant_type", "refresh_token")
 	data.Set("refresh_token", refreshToken)
-	data.Set("redirect_uri", redirectUrl)
+	data.Set("redirect_uri", redirectURL)
 	return data
 }
 
-func GetOauthRequest(dataContent io.Reader, endPoint, clientId, clientSecret string) (*http.Request, error) {
+// GetOauthRequest returns Oauth Request
+func GetOauthRequest(dataContent io.Reader, endPoint, clientID, clientSecret string) (*http.Request, error) {
 	request, err := http.NewRequest("POST", endPoint, dataContent)
 	if err != nil {
 		return nil, errors.Wrap(err, "Request to the endpoint could not be completed")
 	}
-	request.SetBasicAuth(clientId, clientSecret)
+	request.SetBasicAuth(clientID, clientSecret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
 	return request, nil
 
 }
 
+// GetOauthAccessToken returns Oauth Token
 func GetOauthAccessToken(
 	endPoint,
-	client_id,
-	client_secret string,
+	clientID,
+	clientSecret string,
 	data url.Values) (string, error) {
 
 	client := &http.Client{}
-	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, client_id, client_secret)
+	request, err := GetOauthRequest(strings.NewReader(data.Encode()), endPoint, clientID, clientSecret)
 	if err != nil {
 		return "", errors.Wrap(err, "Oauth request returned an error:")
 	}

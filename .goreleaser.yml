@@ -3,7 +3,10 @@
 before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
-    - go mod tidy
+    # https://github.com/golang/go/issues/40883
+    # - go mod tidy
+    - go mod verify
+
 builds:
 - env:
     # goreleaser does not work with CGO, it could also complicate

@@ -3,7 +3,8 @@
 before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
-    - go mod tidy
+    # - go mod tidy
+    - go mod verify
 
 builds:
 - env:

@@ -25,13 +25,13 @@ workspace-root
 | Name | Version |
 |------|---------|
 | terraform | >= 0.12.9 |
-| snowsql | >= 0.2.0 |
+| snowsql | >= 0.3.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| snowsql | >= 0.2.0 |
+| snowsql | >= 0.3.0 |
 | template | n/a |
 
 ## Inputs

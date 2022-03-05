@@ -42,3 +42,5 @@ terraform
 
 # Ignore idea folders and files
 .idea/
+
+examples/scratch

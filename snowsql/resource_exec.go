@@ -11,7 +11,7 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-var lifecycleSchema = map[string]*schema.Schema{
+var createLifecycleSchema = map[string]*schema.Schema{
 	"statements": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -34,10 +34,34 @@ var lifecycleSchema = map[string]*schema.Schema{
 	},
 }
 
+var deleteLifecycleSchema = map[string]*schema.Schema{
+	"statements": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    false,
+		Description: "A string containing one or many SnowSQL statements separated by semicolons.",
+		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+			v := val.(string)
+			if v == "" {
+				errs = append(errs, fmt.Errorf("%q cannot be an empty string", key))
+			}
+			return
+		},
+	},
+	"number_of_statements": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		ForceNew:    false,
+		Default:     -1,
+		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.",
+	},
+}
+
 func resourceExec() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceExecCreate,
 		ReadContext:   resourceExecRead,
+		UpdateContext: resourceExecUpdate,
 		DeleteContext: resourceExecDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -53,17 +77,17 @@ func resourceExec() *schema.Resource {
 				ForceNew:    true,
 				Description: "Specifies the SnowSQL create lifecycle.",
 				Elem: &schema.Resource{
-					Schema: lifecycleSchema,
+					Schema: createLifecycleSchema,
 				},
 			},
 			"delete": {
 				Type:        schema.TypeList,
 				Required:    true,
 				MaxItems:    1,
-				ForceNew:    true,
+				ForceNew:    false,
 				Description: "Specifies the SnowSQL delete lifecycle.",
 				Elem: &schema.Resource{
-					Schema: lifecycleSchema,
+					Schema: deleteLifecycleSchema,
 				},
 			},
 			"delete_on_create": {
@@ -122,6 +146,14 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 // resourceExecRead is not implemented and stubbed out because it is required.
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	return diags
+}
+
+func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// https://github.com/aidanmelen/terraform-provider-snowsql/issues/11
+
 	return diags
 }
 

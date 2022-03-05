@@ -22,7 +22,7 @@ Note that this example may create resources which can cost money (Warehouse, Dat
 | terraform | >= 0.13.0 |
 | random | >= 2.1 |
 | snowflake | >= 0.25.18 |
-| snowsql | >= 0.2.0 |
+| snowsql | >= 0.3.0 |
 
 ## Providers
 
@@ -30,7 +30,7 @@ Note that this example may create resources which can cost money (Warehouse, Dat
 |------|---------|
 | random | >= 2.1 |
 | snowflake | >= 0.25.18 |
-| snowsql | >= 0.2.0 |
+| snowsql | >= 0.3.0 |
 
 ## Inputs
 

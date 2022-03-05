@@ -26,7 +26,7 @@ terraform {
     }
     snowsql = {
       source  = "aidanmelen/snowsql"
-      version = ">= 0.2.0"
+      version = ">= 0.3.0"
     }
     random = ">= 2.1"
   }

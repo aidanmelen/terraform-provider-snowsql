@@ -79,8 +79,6 @@ resource "snowsql_exec" "dcl" {
     REVOKE ALL PRIVILEGES ON FUTURE TABLES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
     EOT
   }
-
-  delete_on_create = true
 }
 
 resource "snowflake_role_grants" "grant" {

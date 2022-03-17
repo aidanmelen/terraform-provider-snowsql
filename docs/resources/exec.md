@@ -116,8 +116,6 @@ resource "snowsql_exec" "dcl" {
     REVOKE ALL PRIVILEGES ON FUTURE TABLES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
     EOT
   }
-
-  delete_on_create = true
 }
 
 resource "snowflake_role_grants" "grant" {
@@ -141,7 +139,6 @@ output "snowsql_delete_stmts" {
 * `name` - (Required) Specifies the identifier for the SnowSQL commands.
 * `create` - (Required) Specifies the SnowSQL create lifecycle. See [Lifecycle item](#lifecycle-item) below for details.
 * `delete` - (Required) Specifies the SnowSQL delete lifecycle. See [Lifecycle item](#lifecycle-item) below for details.
-* `delete_on_create` - (Optional) Execute delete statements before create statements during the create lifecycle. See [Delete On Create Example](#delete-on-create-example) below for details.
 
 ### Lifecycle item
 
@@ -168,52 +165,6 @@ INSERT INTO TEST VALUES (3);
 ```
 
 If you then query the contents of the table named "test", the values 1 and 2 would be present. See [gosnowflake](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) for more details.
-
-## Delete On Create Example
-
--> A *zombie resource* is a resource that is created in terraform state but never dies. It requires manual intervention to remove from state.
-
-`delete_on_create` ensures that both delete and create statements compile and execute before the resource is applied to state. The following example will fail on apply and prevent the creation of a zombie resource.
-
-```hcl
-resource "snowsql_exec" "dcl" {
-  name = "dcl"
-
-  create {
-    statements = <<-EOT
-    CREATE USER IF NOT EXISTS example
-    COMMENT 'hopefully the delete statements negate me.';
-    EOT
-  }
-
-  delete {
-    statements = "DROPPER USER IF EXISTS example; -- this will fail"
-  }
-
-  delete_on_create = true
-}
-```
-
-This is logically equivalent to
-
-```hcl
-resource "snowsql_exec" "dcl" {
-  name = "dcl"
-
-  create {
-    statements = <<-EOT
-    DROPPER USER IF EXISTS EXAMPLE; -- this will fail
-    CREATE USER IF NOT EXISTS example
-    COMMENT 'hopefully the delete statements negate me.';
-    EOT
-  }
-
-  delete {
-    statements = "DROPPER USER IF EXISTS example; -- this will fail"
-  }
-}
-```
-
 
 ## Attributes Reference
 

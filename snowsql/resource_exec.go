@@ -90,12 +90,6 @@ func resourceExec() *schema.Resource {
 					Schema: deleteLifecycleSchema,
 				},
 			},
-			"delete_on_create": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Execute the delete statements prior to the create statements during the create lifecycle. This ensures the create and delete statements compile or execute before being written to state.",
-			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -120,16 +114,6 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	db := m.(*sql.DB)
 	name := d.Get("name").(string)
-
-	deleteOnCreate := d.Get("delete_on_create").(bool)
-	if deleteOnCreate == true {
-		multiStmt, numOfStmts := parseLifecycleSchemaData("delete", d)
-		multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
-		_, err := db.ExecContext(multiStmtCtx, multiStmt)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
 
 	multiStmt, numOfStmts := parseLifecycleSchemaData("create", d)
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)

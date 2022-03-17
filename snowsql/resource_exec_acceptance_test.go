@@ -42,8 +42,6 @@ func execConfig(name string) string {
 		delete {
 			statements = "DROP DATABASE IF EXISTS ${local.name}"
 		}
-
-		delete_on_create = true
 	}
 
 	resource "snowsql_exec" "role" {
@@ -56,8 +54,6 @@ func execConfig(name string) string {
 		delete {
 			statements = "DROP ROLE IF EXISTS ${local.name}"
 		}
-
-		delete_on_create = true
 	}
 
 	resource "snowsql_exec" "table_grants" {
@@ -100,8 +96,6 @@ func execConfig(name string) string {
 			REVOKE ALL PRIVILEGES ON FUTURE PROCEDURES IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
 			EOT
 		}
-
-		delete_on_create = true
 	}
 	`
 	return fmt.Sprintf(s, name)

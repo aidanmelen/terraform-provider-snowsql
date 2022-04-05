@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/chanzuckerberg/terraform-provider-snowflake v0.25.25
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.11.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.13.0
 	github.com/snowflakedb/gosnowflake v1.6.8
 )
 

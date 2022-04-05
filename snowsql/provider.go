@@ -112,6 +112,12 @@ func Provider() *schema.Provider {
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REGION", "us-west-2"),
 			},
+			"host": {
+				Type:        schema.TypeString,
+				Description: "Supports passing in a custom host value to the snowflake go driver for use with privatelink",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_HOST", nil),
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"snowsql_exec": resourceExec(),

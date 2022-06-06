@@ -43,7 +43,7 @@ The SnowSQL provider is intended to be used in conjunction with the Snowflake Pr
 terraform {
   required_providers {
     snowflake = {
-      source  = "chanzuckerberg/snowflake"
+      source  = "Snowflake-Labs/snowflake"
       version = ">= v0.25.18"
     }
     snowsql = {

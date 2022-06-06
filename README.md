@@ -5,7 +5,7 @@
 
 The Terraform SnowSQL provider allows for the management of the `create` and `delete` lifecycles for [Snowflake](https://www.snowflake.com) objects with [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql.html).
 
-**Note:** This provider is NOT a drop in replacement for the robust resources implemented by [terraform-provider-snowflake](https://registry.terraform.io/providers/chanzuckerberg/snowflake/latest/docs) e.g. if you want to create a virtual warehouse, then use the `snowflake_warehouse` resource. Use this provider when you require fine grain control of [DCL](https://www.geeksforgeeks.org/sql-ddl-dql-dml-dcl-tcl-commands/) commands or to implement Snowflake objects that are unsupported by the Snowflake provider resources. More usecases for this provider can be found [here](https://github.com/chanzuckerberg/terraform-provider-snowflake/issues/292#issuecomment-720547980).
+**Note:** This provider is NOT a drop in replacement for the robust resources implemented by [terraform-provider-snowflake](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) e.g. if you want to create a virtual warehouse, then use the `snowflake_warehouse` resource. Use this provider when you require fine grain control of [DCL](https://www.geeksforgeeks.org/sql-ddl-dql-dml-dcl-tcl-commands/) commands or to implement Snowflake objects that are unsupported by the Snowflake provider resources. More usecases for this provider can be found [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/292#issuecomment-720547980).
 
 Similiar to the [terraform-provider-shell](https://registry.terraform.io/providers/scottwinkler/shell/latest/docs); this provider
 

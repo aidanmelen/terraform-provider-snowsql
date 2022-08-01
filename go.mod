@@ -6,7 +6,7 @@ require (
 	github.com/aidanmelen/terraform-provider-snowsql v0.4.2
 	github.com/chanzuckerberg/terraform-provider-snowflake v0.30.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.17.0
-	github.com/snowflakedb/gosnowflake v1.6.8
+	github.com/snowflakedb/gosnowflake v1.6.12
 )
 
 require (

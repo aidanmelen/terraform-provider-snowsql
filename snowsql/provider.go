@@ -118,6 +118,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_HOST", nil),
 			},
+			"warehouse": {
+				Type:        schema.TypeString,
+				Description: "Sets the default warehouse. Optional. Can be sourced from SNOWFLAKE_WAREHOUSE enviornment variable.",
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_WAREHOUSE", nil),
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"snowsql_exec": resourceExec(),

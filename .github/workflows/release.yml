@@ -16,7 +16,7 @@ on:
       - "v*"
 jobs:
   goreleaser:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -28,7 +28,7 @@ jobs:
           go-version: 1.17
       - name: Import GPG key
         id: import_gpg
-        uses: hashicorp/ghaction-import-gpg@v2.1.0
+        uses: crazy-max/ghaction-import-gpg@v5
         env:
           GPG_PRIVATE_KEY: ${{ secrets.HASHI_GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.HASHI_GPG_PASSPHRASE }}

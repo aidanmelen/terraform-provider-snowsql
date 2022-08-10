@@ -70,7 +70,7 @@ jobs:
         go mod download
 
     - name: TF unit tests
-      timeout-minutes: 1
+      timeout-minutes: 5
       run: |
         go test ./snowsql
 

@@ -1,7 +1,7 @@
 package snowsql
 
 import (
-	"github.com/chanzuckerberg/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 

@@ -15,4 +15,6 @@ terraform {
 }
 
 provider "snowflake" {}
-provider "snowsql" {}
+provider "snowsql" {
+  warehouse = "COMPUTE_WH"
+}

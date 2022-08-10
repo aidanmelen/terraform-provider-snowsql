@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 
-	"github.com/aidanmelen/terraform-provider-snowsql/snowsql"
+	"terraform-provider-snowsql/snowsql"
 )
 
 func main() {

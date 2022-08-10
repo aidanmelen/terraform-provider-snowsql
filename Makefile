@@ -3,7 +3,7 @@ REGISTRY=registry.terraform.io
 HOSTNAME=aidanmelen
 NAME=snowsql
 BINARY=terraform-provider-${NAME}
-VERSION=0.4.4
+VERSION=1.0.0
 OS_ARCH=darwin_amd64
 
 default: install
@@ -15,6 +15,9 @@ clean: ## clean the repo
 	rm terraform-provider-snowflake 2>/dev/null || true
 	go clean
 	rm -rf dist
+
+docs:
+	tfplugindocs generate
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/${REGISTRY}/${HOSTNAME}/${NAME}/${VERSION}/${OS_ARCH}
@@ -52,3 +55,4 @@ tools:
 	go get github.com/bflad/tfproviderdocs
 	go get github.com/bflad/tfproviderlint/cmd/tfproviderlint
 	go get github.com/katbyte/terrafmt
+	go get github.com/hashicorp/terraform-plugin-docs

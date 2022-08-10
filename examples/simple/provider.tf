@@ -8,13 +8,11 @@ terraform {
     }
     snowsql = {
       source  = "aidanmelen/snowsql"
-      version = ">= 0.4.3"
+      version = ">= 1.0.1"
     }
     random = ">= 2.1"
   }
 }
 
 provider "snowflake" {}
-provider "snowsql" {
-  warehouse = "COMPUTE_WH"
-}
+provider "snowsql" {}

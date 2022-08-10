@@ -16,6 +16,9 @@ clean: ## clean the repo
 	go clean
 	rm -rf dist
 
+docs:
+    tfplugindocs generate
+
 install: build
 	mkdir -p ~/.terraform.d/plugins/${REGISTRY}/${HOSTNAME}/${NAME}/${VERSION}/${OS_ARCH}
 	mv ${BINARY} ~/.terraform.d/plugins/${REGISTRY}/${HOSTNAME}/${NAME}/${VERSION}/${OS_ARCH}
@@ -52,3 +55,4 @@ tools:
 	go get github.com/bflad/tfproviderdocs
 	go get github.com/bflad/tfproviderlint/cmd/tfproviderlint
 	go get github.com/katbyte/terrafmt
+	go get github.com/hashicorp/terraform-plugin-docs

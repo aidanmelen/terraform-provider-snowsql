@@ -3,7 +3,7 @@ REGISTRY=registry.terraform.io
 HOSTNAME=aidanmelen
 NAME=snowsql
 BINARY=terraform-provider-${NAME}
-VERSION=0.4.5
+VERSION=1.0.0
 OS_ARCH=darwin_amd64
 
 default: install
@@ -17,7 +17,7 @@ clean: ## clean the repo
 	rm -rf dist
 
 docs:
-    tfplugindocs generate
+	tfplugindocs generate
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/${REGISTRY}/${HOSTNAME}/${NAME}/${VERSION}/${OS_ARCH}

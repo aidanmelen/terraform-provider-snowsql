@@ -15,7 +15,7 @@ var createLifecycleSchema = map[string]*schema.Schema{
 	"statements": {
 		Type:        schema.TypeString,
 		Required:    true,
-		ForceNew:    true,
+		ForceNew:    false,
 		Description: "A string containing one or many SnowSQL statements separated by semicolons.",
 		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 			v := val.(string)
@@ -28,9 +28,19 @@ var createLifecycleSchema = map[string]*schema.Schema{
 	"number_of_statements": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		ForceNew:    true,
+		ForceNew:    false,
 		Default:     -1,
 		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.",
+	},
+}
+
+var updateLifecycleSchema = map[string]*schema.Schema{
+	"create_in_place": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		ForceNew:    false,
+		Default:     false,
+		Description: "Specifies if the create statements are idempotent and can be run again safely without requiring a delete first.",
 	},
 }
 
@@ -63,6 +73,7 @@ func resourceExec() *schema.Resource {
 		ReadContext:   resourceExecRead,
 		UpdateContext: resourceExecUpdate,
 		DeleteContext: resourceExecDelete,
+		CustomizeDiff: resourceExecCustomizeDiff,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -74,10 +85,20 @@ func resourceExec() *schema.Resource {
 				Type:        schema.TypeList,
 				Required:    true,
 				MaxItems:    1,
-				ForceNew:    true,
+				ForceNew:    false,
 				Description: "Specifies the SnowSQL create lifecycle.",
 				Elem: &schema.Resource{
 					Schema: createLifecycleSchema,
+				},
+			},
+			"update": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				ForceNew:    false,
+				Description: "Specifies the SnowSQL update lifecycle.",
+				Elem: &schema.Resource{
+					Schema: updateLifecycleSchema,
 				},
 			},
 			"delete": {
@@ -109,6 +130,22 @@ func parseLifecycleSchemaData(lifecycle string, d *schema.ResourceData) (string,
 	return multiStmt, numOfStmts
 }
 
+func resourceExecCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, m interface{}) (err error) {
+	// don't customize diff on create
+	if d.Id() == "" {
+		return
+	}
+
+	// if update.update_in_place is false, force replace on a changed create
+	if v := d.Get("update.0.create_in_place").(bool); !v {
+		if d.HasChange("create") {
+			err = d.ForceNew("create")
+		}
+	}
+
+	return
+}
+
 func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -136,7 +173,16 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// https://github.com/aidanmelen/terraform-provider-snowsql/issues/11
+	if v := d.Get("update.0.create_in_place").(bool); v {
+		db := m.(*sql.DB)
+
+		multiStmt, numOfStmts := parseLifecycleSchemaData("create", d)
+		multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
+		_, err := db.ExecContext(multiStmtCtx, multiStmt)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
 	return diags
 }

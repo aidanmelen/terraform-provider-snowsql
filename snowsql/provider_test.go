@@ -28,6 +28,9 @@ func TestProviderImpl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
+	if err := os.Getenv("SNOWFLAKE_ACCOUNT"); err == "" {
+		t.Fatal("SNOWFLAKE_ACCOUNT must be set for acceptance tests")
+	}
 	if err := os.Getenv("SNOWFLAKE_USERNAME"); err == "" {
 		t.Fatal("SNOWFLAKE_USERNAME must be set for acceptance tests")
 	}

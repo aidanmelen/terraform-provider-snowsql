@@ -169,8 +169,9 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// if update is set, execute the given lifecycle commands
-	if _, ok := d.GetOk("update"); ok {
+	// TODO read before update
+
+	if d.HasChange("update.0.statements") {
 		db := m.(*sql.DB)
 		multiStmt, numOfStmts := parseLifecycleSchemaData("update", d)
 

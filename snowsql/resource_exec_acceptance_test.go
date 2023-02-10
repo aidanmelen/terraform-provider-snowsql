@@ -20,6 +20,7 @@ func TestAccExec(t *testing.T) {
 					resource.TestCheckResourceAttr("snowsql_exec.database", "name", accName),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "name", accName),
 					resource.TestCheckResourceAttr("snowsql_exec.table_grants", "name", accName),
+					resource.TestCheckResourceAttr("snowsql_exec.schema", "name", accName),
 				),
 			},
 		},
@@ -95,6 +96,22 @@ func execConfig(name string) string {
 			REVOKE ALL PRIVILEGES ON FUTURE STREAMS IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
 			REVOKE ALL PRIVILEGES ON FUTURE PROCEDURES IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
 			EOT
+		}
+	}
+
+	resource "snowsql_exec" "schema" {
+		name = local.name
+
+		create {
+			statements = "CREATE SCHEMA IF NOT EXISTS ${snowsql_exec.database.name}.${local.name}"
+		}
+
+		update {
+			statements = "ALTER SCHEMA IF EXISTS ${snowsql_exec.database.name}.${local.name} SET DATA_RETENTION_TIME_IN_DAYS = 1"
+		}
+
+		delete {
+			statements = "DROP SCHEMA IF EXISTS ${snowsql_exec.database.name}.${local.name}"
 		}
 	}
 	`

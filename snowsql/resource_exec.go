@@ -34,6 +34,29 @@ var createLifecycleSchema = map[string]*schema.Schema{
 	},
 }
 
+var updateLifecycleSchema = map[string]*schema.Schema{
+	"statements": {
+		Type:        schema.TypeString,
+		Required:    true,
+		ForceNew:    false,
+		Description: "A string containing one or many SnowSQL statements separated by semicolons.",
+		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+			v := val.(string)
+			if v == "" {
+				errs = append(errs, fmt.Errorf("%q cannot be an empty string", key))
+			}
+			return
+		},
+	},
+	"number_of_statements": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		ForceNew:    false,
+		Default:     -1,
+		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.",
+	},
+}
+
 var deleteLifecycleSchema = map[string]*schema.Schema{
 	"statements": {
 		Type:        schema.TypeString,
@@ -78,6 +101,16 @@ func resourceExec() *schema.Resource {
 				Description: "Specifies the SnowSQL create lifecycle.",
 				Elem: &schema.Resource{
 					Schema: createLifecycleSchema,
+				},
+			},
+			"update": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				ForceNew:    false,
+				Description: "Specifies the SnowSQL update lifecycle.",
+				Elem: &schema.Resource{
+					Schema: updateLifecycleSchema,
 				},
 			},
 			"delete": {
@@ -136,7 +169,18 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// https://github.com/aidanmelen/terraform-provider-snowsql/issues/11
+	// TODO read before update
+
+	if d.HasChange("update.0.statements") {
+		db := m.(*sql.DB)
+		multiStmt, numOfStmts := parseLifecycleSchemaData("update", d)
+
+		multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
+		_, err := db.ExecContext(multiStmtCtx, multiStmt)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
 	return diags
 }

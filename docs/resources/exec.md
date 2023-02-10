@@ -21,6 +21,10 @@ description: |-
 - `delete` (Block List, Min: 1, Max: 1) Specifies the SnowSQL delete lifecycle. (see [below for nested schema](#nestedblock--delete))
 - `name` (String) Specifies the identifier for the SnowSQL commands.
 
+### Optional
+
+- `update` (Block List, Max: 1) Specifies the SnowSQL update lifecycle. (see [below for nested schema](#nestedblock--update))
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.
@@ -39,6 +43,18 @@ Optional:
 
 <a id="nestedblock--delete"></a>
 ### Nested Schema for `delete`
+
+Required:
+
+- `statements` (String) A string containing one or many SnowSQL statements separated by semicolons.
+
+Optional:
+
+- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.
+
+
+<a id="nestedblock--update"></a>
+### Nested Schema for `update`
 
 Required:
 

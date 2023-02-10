@@ -103,11 +103,11 @@ func execConfig(name string) string {
 		name = local.name
 
 		create {
-			statements = "CREATE OR REPLACE SCHEMA ${snowsql_exec.database.name}.${local.name}"
+			statements = "CREATE SCHEMA IF NOT EXISTS ${snowsql_exec.database.name}.${local.name}"
 		}
 
 		update {
-			create_in_place = true
+			statements = "ALTER SCHEMA IF EXISTS ${snowsql_exec.database.name}.${local.name} SET DATA_RETENTION_TIME_IN_DAYS = 1"
 		}
 
 		delete {

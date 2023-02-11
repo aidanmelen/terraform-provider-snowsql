@@ -1,12 +1,15 @@
-resource "random_pet" "server" {
-  prefix    = var.name
+resource "random_pet" "name" {
+  prefix    = upper(basename(path.cwd))
   separator = "_"
 }
 
 locals {
-  name = upper(random_pet.server.id)
+  name     = upper(random_pet.name.id)
 }
 
+###############################################################################
+# Snowflake
+###############################################################################
 resource "snowflake_warehouse" "warehouse" {
   name = local.name
 }
@@ -63,13 +66,50 @@ resource "snowflake_schema_grant" "grant" {
   schema_name   = snowflake_schema.schema.name
 }
 
-module "dcl" {
-  source = "./modules/snowsql_exec_from_templates"
+###############################################################################
+# SnowSQL
+###############################################################################
+resource "snowsql_exec" "grant_all" {
+  name = local.name
 
-  name = "snowflake_table_grant_all"
-  template_vars = {
-    database = snowflake_database.database.name
-    role     = snowflake_role.role.name
+  # grant all privileges on all (future) object when the resource is created
+  create {
+    statements = <<-EOT
+      GRANT ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON ALL VIEWS IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON ALL FILE FORMATS IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON ALL SEQUENCES IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON ALL STREAMS IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON ALL PROCEDURES IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON FUTURE TABLES IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON FUTURE VIEWS IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON FUTURE FILE FORMATS IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON FUTURE SEQUENCES IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON FUTURE FUNCTIONS IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON FUTURE STREAMS IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+      GRANT ALL PRIVILEGES ON FUTURE PROCEDURES IN DATABASE ${snowsql_exec.database.name} TO ROLE ${snowsql_exec.role.name};
+    EOT
+  }
+
+  # revoke all grants when the resource is destroyed
+  delete {
+    statements = <<-EOT
+      REVOKE ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON ALL VIEWS IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON ALL FILE FORMATS IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON ALL STREAMS IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON ALL PROCEDURES IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON FUTURE TABLES IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON FUTURE VIEWS IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON FUTURE FILE FORMATS IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON FUTURE SEQUENCES IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON FUTURE FUNCTIONS IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON FUTURE STREAMS IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+			REVOKE ALL PRIVILEGES ON FUTURE PROCEDURES IN DATABASE ${snowsql_exec.database.name} FROM ROLE ${snowsql_exec.role.name};
+    EOT
   }
 }
 

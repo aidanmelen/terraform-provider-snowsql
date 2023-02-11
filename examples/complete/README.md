@@ -1,6 +1,6 @@
 # Complete Example
 
-Configuration in this directory demonstrates how to render and execute [DCL](https://www.geeksforgeeks.org/sql-ddl-dql-dml-dcl-tcl-commands/) SnowSQL commands from template files.
+Configuration in this directory demonstrates how to execute a [DCL](https://www.geeksforgeeks.org/sql-ddl-dql-dml-dcl-tcl-commands/) with the `snowsql_exec` resource.
 
 ## Usage
 
@@ -12,8 +12,7 @@ $ terraform plan
 $ terraform apply
 ```
 
-Note that this example may create resources which can cost credits (Warehouse Usage, Database Storage).
-Run `terraform destroy` when you don't need these resources.
+Note that this example may create resources which can cost money (Warehouse, Database Storage). Run `terraform destroy` when you don't need these resources.
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
@@ -29,14 +28,13 @@ Run `terraform destroy` when you don't need these resources.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_random"></a> [random](#provider\_random) | >= 2.1 |
-| <a name="provider_snowflake"></a> [snowflake](#provider\_snowflake) | >= 0.33.4 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.3.2 |
+| <a name="provider_snowflake"></a> [snowflake](#provider\_snowflake) | 0.40.0 |
+| <a name="provider_snowsql"></a> [snowsql](#provider\_snowsql) | 0.4.5 |
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_dcl"></a> [dcl](#module\_dcl) | ./modules/snowsql_exec_from_templates | n/a |
+No modules.
 
 ## Resources
 
@@ -53,12 +51,13 @@ Run `terraform destroy` when you don't need these resources.
 | [snowflake_user.user](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user) | resource |
 | [snowflake_warehouse.warehouse](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/warehouse) | resource |
 | [snowflake_warehouse_grant.grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/warehouse_grant) | resource |
+| [snowsql_exec.dcl](https://registry.terraform.io/providers/aidanmelen/snowsql/latest/docs/resources/exec) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_name"></a> [name](#input\_name) | The name of the project. | `string` | `"COMPLETE_EXAMPLE"` | no |
+| <a name="input_name"></a> [name](#input\_name) | The name of the project. | `string` | `"SIMPLE_EXAMPLE"` | no |
 | <a name="input_temporary_user_passworld"></a> [temporary\_user\_passworld](#input\_temporary\_user\_passworld) | The temporary password for the user. | `string` | `"ChangeMe2020!"` | no |
 
 ## Outputs

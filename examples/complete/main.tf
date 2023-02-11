@@ -4,7 +4,7 @@ resource "random_pet" "name" {
 }
 
 locals {
-  name     = upper(random_pet.name.id)
+  name = upper(random_pet.name.id)
 }
 
 ###############################################################################

@@ -23,4 +23,3 @@ resource "snowsql_exec" "role" {
     statements = "DROP ROLE IF EXISTS ${local.name};"
   }
 }
-

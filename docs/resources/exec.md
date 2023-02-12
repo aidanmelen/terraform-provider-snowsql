@@ -3,7 +3,7 @@
 page_title: "snowsql_exec Resource - terraform-provider-snowsql"
 subcategory: ""
 description: |-
-  
+
 ---
 
 # snowsql_exec (Resource)
@@ -63,5 +63,3 @@ Required:
 Optional:
 
 - `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.
-
-

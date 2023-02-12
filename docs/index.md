@@ -3,7 +3,7 @@
 page_title: "snowsql Provider"
 subcategory: ""
 description: |-
-  
+
 ---
 
 # snowsql Provider

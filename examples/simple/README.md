@@ -22,7 +22,7 @@ Note that this example may create resources which can cost money (Warehouse, Dat
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 2.1 |
 | <a name="requirement_snowflake"></a> [snowflake](#requirement\_snowflake) | >= 0.33.4 |
-| <a name="requirement_snowsql"></a> [snowsql](#requirement\_snowsql) | >= 1.2.0 |
+| <a name="requirement_snowsql"></a> [snowsql](#requirement\_snowsql) | >= 1.1.1 |
 
 ## Providers
 
@@ -50,5 +50,7 @@ No inputs.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_snowsql_create_stmts"></a> [snowsql\_create\_stmts](#output\_snowsql\_create\_stmts) | The SnowSQL statements used during the resource lifecycle create. |
+| <a name="output_snowsql_create_stmts"></a> [snowsql\_create\_stmts](#output\_snowsql\_create\_stmts) | The SnowSQL statements executed during the first terraform apply. |
+| <a name="output_snowsql_delete_stmts"></a> [snowsql\_delete\_stmts](#output\_snowsql\_delete\_stmts) | The SnowSQL statements that will be executed during terraform destroy. |
+| <a name="output_snowsql_update_stmts"></a> [snowsql\_update\_stmts](#output\_snowsql\_update\_stmts) | The SnowSQL statements that will be execute as in-place changes after the first terraform apply. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

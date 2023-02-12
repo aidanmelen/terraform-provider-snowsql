@@ -12,7 +12,7 @@ resource "snowflake_role" "role" {
 ###############################################################################
 # SnowSQL
 ###############################################################################
-resource "snowsql_exec" "grant_all" {
+resource "snowsql_exec" "role_grant_all" {
   name = local.name
 
   # grant all privileges on all and future objects during the resource creation
@@ -33,6 +33,10 @@ resource "snowsql_exec" "grant_all" {
       GRANT ALL PRIVILEGES ON FUTURE STREAMS IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
       GRANT ALL PRIVILEGES ON FUTURE PROCEDURES IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
     EOT
+  }
+
+  read {
+    statements = "SHOW GRANTS ON ROLE ${local.name};"
   }
 
   # revoke all grants during the resource destruction

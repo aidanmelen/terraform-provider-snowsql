@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/jmoiron/sqlx"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -30,11 +31,11 @@ var createLifecycleSchema = map[string]*schema.Schema{
 		Optional:    true,
 		ForceNew:    true,
 		Default:     -1,
-		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.",
+		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements.",
 	},
 }
 
-var updateLifecycleSchema = map[string]*schema.Schema{
+var genericLifecycleSchema = map[string]*schema.Schema{
 	"statements": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -53,32 +54,78 @@ var updateLifecycleSchema = map[string]*schema.Schema{
 		Optional:    true,
 		ForceNew:    false,
 		Default:     -1,
-		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.",
+		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements.",
 	},
 }
 
-var deleteLifecycleSchema = map[string]*schema.Schema{
-	"statements": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    false,
-		Description: "A string containing one or many SnowSQL statements separated by semicolons.",
-		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-			v := val.(string)
-			if v == "" {
-				errs = append(errs, fmt.Errorf("%q cannot be an empty string", key))
-			}
-			return
-		},
-	},
-	"number_of_statements": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		ForceNew:    false,
-		Default:     -1,
-		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.",
-	},
-}
+// var readLifecycleSchema = map[string]*schema.Schema{
+// 	"statements": {
+// 		Type:        schema.TypeString,
+// 		Optional:    true,
+// 		ForceNew:    false,
+// 		Description: "A string containing one or many SnowSQL statements separated by semicolons.",
+// 		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+// 			v := val.(string)
+// 			if v == "" {
+// 				errs = append(errs, fmt.Errorf("%q cannot be an empty string", key))
+// 			}
+// 			return
+// 		},
+// 	},
+// 	"number_of_statements": {
+// 		Type:        schema.TypeInt,
+// 		Optional:    true,
+// 		ForceNew:    false,
+// 		Default:     -1,
+// 		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements.",
+// 	},
+// }
+
+// var updateLifecycleSchema = map[string]*schema.Schema{
+// 	"statements": {
+// 		Type:        schema.TypeString,
+// 		Required:    true,
+// 		ForceNew:    false,
+// 		Description: "A string containing one or many SnowSQL statements separated by semicolons.",
+// 		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+// 			v := val.(string)
+// 			if v == "" {
+// 				errs = append(errs, fmt.Errorf("%q cannot be an empty string", key))
+// 			}
+// 			return
+// 		},
+// 	},
+// 	"number_of_statements": {
+// 		Type:        schema.TypeInt,
+// 		Optional:    true,
+// 		ForceNew:    false,
+// 		Default:     -1,
+// 		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements.",
+// 	},
+// }
+
+// var deleteLifecycleSchema = map[string]*schema.Schema{
+// 	"statements": {
+// 		Type:        schema.TypeString,
+// 		Required:    true,
+// 		ForceNew:    false,
+// 		Description: "A string containing one or many SnowSQL statements separated by semicolons.",
+// 		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+// 			v := val.(string)
+// 			if v == "" {
+// 				errs = append(errs, fmt.Errorf("%q cannot be an empty string", key))
+// 			}
+// 			return
+// 		},
+// 	},
+// 	"number_of_statements": {
+// 		Type:        schema.TypeInt,
+// 		Optional:    true,
+// 		ForceNew:    false,
+// 		Default:     -1,
+// 		Description: "Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements.",
+// 	},
+// }
 
 func resourceExec() *schema.Resource {
 	return &schema.Resource{
@@ -91,7 +138,7 @@ func resourceExec() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Specifies the identifier for the SnowSQL commands.",
+				Description: "Specifies the identifier for the SnowSQL resource.",
 			},
 			"create": {
 				Type:        schema.TypeList,
@@ -103,6 +150,16 @@ func resourceExec() *schema.Resource {
 					Schema: createLifecycleSchema,
 				},
 			},
+			"read": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				ForceNew:    false,
+				Description: "Specifies the SnowSQL read lifecycle.",
+				Elem: &schema.Resource{
+					Schema: genericLifecycleSchema,
+				},
+			},
 			"update": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -110,7 +167,7 @@ func resourceExec() *schema.Resource {
 				ForceNew:    false,
 				Description: "Specifies the SnowSQL update lifecycle.",
 				Elem: &schema.Resource{
-					Schema: updateLifecycleSchema,
+					Schema: genericLifecycleSchema,
 				},
 			},
 			"delete": {
@@ -120,7 +177,7 @@ func resourceExec() *schema.Resource {
 				ForceNew:    false,
 				Description: "Specifies the SnowSQL delete lifecycle.",
 				Elem: &schema.Resource{
-					Schema: deleteLifecycleSchema,
+					Schema: genericLifecycleSchema,
 				},
 			},
 		},
@@ -157,12 +214,59 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	d.SetId(name)
 
+	// resourceExecRead(ctx, d, m)
+
 	return diags
 }
 
-// resourceExecRead is not implemented and stubbed out because it is required.
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	readStmts, ok := d.Get("read.0.statements").(string)
+	if !ok {
+		d.Set("results", nil)
+		return nil
+	}
+
+	db := m.(*sql.DB)
+
+	sdb := sqlx.NewDb(db, "snowflake").Unsafe()
+	rows, err := sdb.Queryx(readStmts)
+
+	if err != nil {
+		fmt.Println("Error running query:", err)
+		return diags
+	}
+
+	var resultData []map[string]interface{}
+	for rows.Next() {
+		row := make(map[string]interface{})
+		err := rows.MapScan(row)
+		if err != nil {
+			fmt.Println("Error scanning row:", err)
+			return diags
+		}
+		resultData = append(resultData, row)
+	}
+
+	if err := rows.Err(); err != nil {
+		fmt.Println("Error in result set:", err)
+		return diags
+	}
+
+	d.Set("results", resultData)
+
+	// log.Print("[DEBUG] results ", resultData)
+	// jsonResultData, err := json.Marshal(resultData)
+	// if err != nil {
+	// 	return diag.FromErr(err)
+	// }
+
+	// log.Print("[DEBUG] results json ", string(jsonResultData))
+	// if err := d.Set("results", string(jsonResultData)); err != nil {
+	// 	return diag.FromErr(err)
+	// }
+
 	return diags
 }
 
@@ -175,18 +279,20 @@ func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		return nil
 	}
 
-	if d.HasChange("update.0.statements") {
-		db := m.(*sql.DB)
-		multiStmt, numOfStmts := parseLifecycleSchemaData("update", d)
-
-		multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
-		_, err := db.ExecContext(multiStmtCtx, multiStmt)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+	if !d.HasChange("update.0.statements") {
+		return nil
 	}
 
-	// TODO: execute read query and update result attribute.
+	db := m.(*sql.DB)
+	multiStmt, numOfStmts := parseLifecycleSchemaData("update", d)
+
+	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
+	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// resourceExecRead(ctx, d, m)
 
 	return diags
 }

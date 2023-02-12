@@ -3,7 +3,7 @@ REGISTRY=registry.terraform.io
 HOSTNAME=aidanmelen
 NAME=snowsql
 BINARY=terraform-provider-${NAME}
-VERSION=1.1.1
+VERSION=1.2.0
 OS_ARCH=darwin_amd64
 
 default: install

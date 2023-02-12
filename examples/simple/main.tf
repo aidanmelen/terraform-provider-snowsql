@@ -6,6 +6,12 @@ resource "snowsql_exec" "role" {
     statements = "CREATE ROLE IF NOT EXISTS ${local.name};"
   }
 
+  read {
+    statements = <<-EOT
+      SHOW ROLES LIKE '%${local.name}%';
+    EOT
+  }
+
   # uncomment to alter the snowflake object(s) during the in-place resource change
   # update {
   #   statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform';"

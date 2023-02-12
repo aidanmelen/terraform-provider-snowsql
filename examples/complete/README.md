@@ -53,7 +53,7 @@ No inputs.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_snowsql_create_stmts"></a> [snowsql\_create\_stmts](#output\_snowsql\_create\_stmts) | The SnowSQL statements executed during the first terraform apply. |
-| <a name="output_snowsql_delete_stmts"></a> [snowsql\_delete\_stmts](#output\_snowsql\_delete\_stmts) | The SnowSQL statements that will be executed during terraform destroy. |
-| <a name="output_snowsql_update_stmts"></a> [snowsql\_update\_stmts](#output\_snowsql\_update\_stmts) | The SnowSQL statements that will be execute as in-place changes after the first terraform apply. |
+| <a name="output_snowsql_create_statements"></a> [snowsql\_create\_statements](#output\_snowsql\_create\_statements) | The SnowSQL statements executed during the first terraform apply. |
+| <a name="output_snowsql_delete_statements"></a> [snowsql\_delete\_statements](#output\_snowsql\_delete\_statements) | The SnowSQL statements that will be executed during terraform destroy. |
+| <a name="output_snowsql_update_statements"></a> [snowsql\_update\_statements](#output\_snowsql\_update\_statements) | The SnowSQL statements that will be execute as in-place changes after the first terraform apply. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

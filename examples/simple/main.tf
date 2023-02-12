@@ -3,13 +3,11 @@ resource "snowsql_exec" "role" {
 
   # create snowflake object(s) during the resource creation
   create {
-    statements = "CREATE ROLE IF NOT EXISTS ${local.name};"
+    statements = "CREATE ROLE ${local.name};"
   }
 
   read {
-    statements = <<-EOT
-      SHOW ROLES LIKE '%${local.name}%';
-    EOT
+    statements = "SHOW ROLES LIKE '${local.name}';"
   }
 
   # uncomment to alter the snowflake object(s) during the in-place resource change

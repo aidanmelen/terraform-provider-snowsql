@@ -16,7 +16,7 @@ clean: ## clean the repo
 	go clean
 	rm -rf dist
 
-docs:
+doc:
 	tfplugindocs generate
 
 install: build

@@ -3,7 +3,7 @@
 page_title: "snowsql_exec Resource - terraform-provider-snowsql"
 subcategory: ""
 description: |-
-
+  
 ---
 
 # snowsql_exec (Resource)
@@ -19,10 +19,12 @@ description: |-
 
 - `create` (Block List, Min: 1, Max: 1) Specifies the SnowSQL create lifecycle. (see [below for nested schema](#nestedblock--create))
 - `delete` (Block List, Min: 1, Max: 1) Specifies the SnowSQL delete lifecycle. (see [below for nested schema](#nestedblock--delete))
-- `name` (String) Specifies the identifier for the SnowSQL commands.
+- `name` (String) Specifies the identifier for the SnowSQL resource.
 
 ### Optional
 
+- `read` (Block List, Max: 1) Specifies the SnowSQL read lifecycle. (see [below for nested schema](#nestedblock--read))
+- `results` (String) The read query results.
 - `update` (Block List, Max: 1) Specifies the SnowSQL update lifecycle. (see [below for nested schema](#nestedblock--update))
 
 ### Read-Only
@@ -38,7 +40,7 @@ Required:
 
 Optional:
 
-- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.
+- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `None` which will dynamically count the number semicolons in SnowSQL statements.
 
 
 <a id="nestedblock--delete"></a>
@@ -50,7 +52,19 @@ Required:
 
 Optional:
 
-- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.
+- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `None` which will dynamically count the number semicolons in SnowSQL statements.
+
+
+<a id="nestedblock--read"></a>
+### Nested Schema for `read`
+
+Required:
+
+- `statements` (String) A string containing one or many SnowSQL statements separated by semicolons.
+
+Optional:
+
+- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `None` which will dynamically count the number semicolons in SnowSQL statements.
 
 
 <a id="nestedblock--update"></a>
@@ -62,4 +76,6 @@ Required:
 
 Optional:
 
-- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `-1` which will dynamically count the number semicolons in SnowSQL statements. Go [here](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) to learn more about preventing SQL injection attacks.
+- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `None` which will dynamically count the number semicolons in SnowSQL statements.
+
+

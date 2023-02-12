@@ -169,7 +169,11 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// TODO read before update
+	_, ok := d.GetOk("update.0.statements")
+	if !ok {
+		d.Set("update", nil)
+		return nil
+	}
 
 	if d.HasChange("update.0.statements") {
 		db := m.(*sql.DB)
@@ -181,6 +185,8 @@ func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			return diag.FromErr(err)
 		}
 	}
+
+	// TODO: execute read query and update result attribute.
 
 	return diags
 }

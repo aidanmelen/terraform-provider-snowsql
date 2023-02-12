@@ -15,7 +15,7 @@ resource "snowflake_role" "role" {
 resource "snowsql_exec" "grant_all" {
   name = local.name
 
-  # grant all privileges on all (future) objects when the resource is created
+  # grant all privileges on all and future objects during the resource creation
   create {
     statements = <<-EOT
       GRANT ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
@@ -35,7 +35,7 @@ resource "snowsql_exec" "grant_all" {
     EOT
   }
 
-  # revoke all grants when the resource is destroyed
+  # revoke all grants during the resource destruction
   delete {
     statements = <<-EOT
       REVOKE ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};

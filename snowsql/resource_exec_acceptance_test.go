@@ -19,26 +19,32 @@ func TestAccUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowsql_exec.role", "name", accName),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "read.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "update.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "results", "example"),
 				),
 			},
 			{
-				Config: applyUpdate(accName),
+				Config: applyOptionalLifecycleBlocks(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowsql_exec.role", "name", accName),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "read.%", fmt.Sprintf("SHOW ROLE ROLES LIKE %s;", accName)),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "update.0.statements", fmt.Sprintf("ALTER ROLE IF EXISTS %s SET COMMENT = 'updated with terraform';", accName)),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "results", "example"),
 				),
 			},
 			{
-				Config: destroyUpdate(accName),
+				Config: destroyOptionalLifecycleBlocks(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowsql_exec.role", "name", accName),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "read.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "update.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "results", "example"),
 				),
 			},
 		},
@@ -62,13 +68,17 @@ func applyCreate(name string) string {
 	return fmt.Sprintf(s, name, name, name)
 }
 
-func applyUpdate(name string) string {
+func applyOptionalLifecycleBlocks(name string) string {
 	s := `
 	resource "snowsql_exec" "role" {
 	  name = "%s"
 
 		create {
 			statements = "CREATE ROLE IF NOT EXISTS %s;"
+		}
+
+		create {
+			statements = "SHOW ROLES LIKE %s;"
 		}
 
 		update {
@@ -83,7 +93,7 @@ func applyUpdate(name string) string {
 	return fmt.Sprintf(s, name, name, name, name)
 }
 
-func destroyUpdate(name string) string {
+func destroyOptionalLifecycleBlocks(name string) string {
 	s := `
 	resource "snowsql_exec" "role" {
 	  name = "%s"

@@ -153,13 +153,12 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 
-	resourceExecRead(ctx, d, m)
-
 	d.SetId(name)
 
 	return diags
 }
 
+// TODO: https://github.com/hashicorp/terraform/issues/15857
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -179,29 +178,29 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diags
 	}
 
-	var resultData []map[string]interface{}
+	var queryResult []map[string]interface{}
 	for rows.Next() {
-		row := make(map[string]interface{})
-		err := rows.MapScan(row)
+		rowData := make(map[string]interface{})
+		err := rows.MapScan(rowData)
 		if err != nil {
 			fmt.Println("Error scanning row:", err)
 			return diag.FromErr(err)
 		}
-		resultData = append(resultData, row)
+		queryResult = append(queryResult, rowData)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err := rows.Close(); err != nil {
 		return diag.FromErr(err)
 	}
 
-	log.Print("[DEBUG] results ", resultData)
-	jsonResultData, err := json.Marshal(resultData)
+	log.Print("[DEBUG] queryResult ", queryResult)
+	marshalledResult, err := json.Marshal(queryResult)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	log.Print("[DEBUG] results json ", string(jsonResultData))
-	if err := d.Set("results", string(jsonResultData)); err != nil {
+	log.Print("[DEBUG] marshalledResult ", string(marshalledResult))
+	if err := d.Set("results", string(marshalledResult)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -229,8 +228,6 @@ func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	resourceExecRead(ctx, d, m)
 
 	return diags
 }

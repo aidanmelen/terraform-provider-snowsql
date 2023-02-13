@@ -3,7 +3,7 @@ resource "snowsql_exec" "role" {
 
   # create snowflake object(s) during the resource creation
   create {
-    statements = "CREATE ROLE ${local.name};"
+    statements = "CREATE ROLE IF NOT EXISTS ${local.name} ;"
   }
 
   read {
@@ -11,9 +11,9 @@ resource "snowsql_exec" "role" {
   }
 
   # uncomment to alter the snowflake object(s) during the in-place resource change
-  # update {
-  #   statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform';"
-  # }
+  update {
+    statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform';"
+  }
 
   # drop the snowflake object(s) during the resource destruction
   delete {

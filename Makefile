@@ -32,14 +32,14 @@ pre-commit: ## run pre-commit checks
 	pre-commit run -a
 	git add -A
 
-test:
+test: ## run the provider unittests
 	go test -i $(TEST) || exit 1
 	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
 
-testacc:
+testacc: ## run the provider acceptance tests
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
 
-tools:
+tools: ## Get the development tools
 	go get -u golang.org/x/lint/golint
 	go get golang.org/x/tools/cmd/goimports
 	go get github.com/bflad/tfproviderdocs
@@ -62,6 +62,6 @@ local-release: ## Release provider locally
 	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64
 
 release: ## Trigger a release
-    git checkout main
+	git checkout main
 	git tag v$(VERSION)
 	git push --tag

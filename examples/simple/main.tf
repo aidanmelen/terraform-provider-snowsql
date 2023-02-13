@@ -3,7 +3,7 @@ resource "snowsql_exec" "role" {
 
   # create snowflake object(s) during the resource creation
   create {
-    statements = "CREATE ROLE IF NOT EXISTS ${local.name} ;"
+    statements = "CREATE ROLE IF NOT EXISTS ${local.name};"
   }
 
   read {

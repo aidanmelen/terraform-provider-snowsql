@@ -7,7 +7,7 @@ resource "snowsql_exec" "role" {
   }
 
   read {
-    statements = "SHOW ROLES LIKE '${local.name}';"
+    statements = "SHOW ROLES LIKE '${local.name}';" 
   }
 
   # uncomment to alter the snowflake object(s) during the in-place resource change

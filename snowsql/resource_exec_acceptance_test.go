@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccUpdate(t *testing.T) {
-	accName := fmt.Sprintf("terraform_provider_snowsql_exec_acceptance_test_%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
+	accName := fmt.Sprintf("terraform_provider_snowsql_acceptance_test_%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		Providers: testAccProviders,
@@ -77,6 +77,10 @@ func applyOptionalLifecycleBlocks(name string) string {
 			statements = "CREATE ROLE IF NOT EXISTS %s;"
 		}
 
+		read {
+			statements = "SHOW ROLES LIKE '%s';"
+		}
+
 		update {
 		  	statements = "ALTER ROLE IF EXISTS %s SET COMMENT = 'updated with terraform';"
 		}
@@ -86,8 +90,7 @@ func applyOptionalLifecycleBlocks(name string) string {
 		}
 	}
 	`
-	// return fmt.Sprintf(s, name, name, name, name, name)
-	return fmt.Sprintf(s, name, name, name, name)
+	return fmt.Sprintf(s, name, name, name, name, name)
 }
 
 func destroyOptionalLifecycleBlocks(name string) string {

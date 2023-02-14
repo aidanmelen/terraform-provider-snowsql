@@ -9,17 +9,20 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jmoiron/sqlx"
 	"github.com/snowflakedb/gosnowflake"
 )
+
+var numberOfStatementsDescription = "A string containing one or many SnowSQL statements separated by semicolons. it's worth noting that splitting queries in this way is not always reliable since some SQL statements (e.g., CREATE FUNCTION) can contain semicolons within the statement itself."
 
 var createLifecycleSchema = map[string]*schema.Schema{
 	"statements": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "A string containing one or many SnowSQL statements separated by semicolons.",
+		Description: numberOfStatementsDescription,
 		ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 			v := val.(string)
 			if v == "" {
@@ -34,7 +37,7 @@ var createLifecycleSchema = map[string]*schema.Schema{
 		ForceNew:    true,
 		Default:     nil,
 		Computed:    true,
-		Description: "Specifies the number of SnowSQL statements. If not provided, the default value is the count of semicolons in SnowSQL statements.",
+		Description: numberOfStatementsDescription,
 	},
 }
 
@@ -94,7 +97,6 @@ func resourceExec() *schema.Resource {
 					Schema: lifecycleSchema,
 				},
 			},
-			// TODO: https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/customizing-differences
 			"update": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -115,13 +117,18 @@ func resourceExec() *schema.Resource {
 					Schema: lifecycleSchema,
 				},
 			},
-			"results": {
+			"read_results": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   true,
-				Description: "The read query results.",
+				Description: "The List of read query results.",
 			},
 		},
+		CustomizeDiff: customdiff.All(
+			customdiff.ComputedIf("read_results", func(ctx context.Context, diff *schema.ResourceDiff, m interface{}) bool {
+				return diff.HasChange("read.0.statements") || diff.HasChange("update.0.statements")
+			}),
+		),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -141,105 +148,112 @@ func parseLifecycleSchemaData(lifecycle string, d *schema.ResourceData) (string,
 }
 
 func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 
+	// Execute the `create` statements
 	db := m.(*sql.DB)
 	name := d.Get("name").(string)
-
 	multiStmt, numOfStmts := parseLifecycleSchemaData("create", d)
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
 	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(name)
 
-	return diags
+	return resourceExecRead(ctx, d, m)
 }
 
-// TODO: https://github.com/hashicorp/terraform/issues/15857
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	readStmts, ok := d.Get("read.0.statements").(string)
 	if !ok {
-		d.Set("results", nil)
+		d.Set("read_results", nil)
 		return nil
 	}
 
+	// Execute the `read` query statements
 	db := m.(*sql.DB)
-
 	sdb := sqlx.NewDb(db, "snowflake").Unsafe()
 	rows, err := sdb.Queryx(readStmts)
 
 	if err != nil {
 		fmt.Println("Error running query:", err)
+		d.Set("read_results", nil)
 		return diags
 	}
 
+	// Loop through the query result rows
 	var queryResult []map[string]interface{}
 	for rows.Next() {
 		rowData := make(map[string]interface{})
 		err := rows.MapScan(rowData)
 		if err != nil {
 			fmt.Println("Error scanning row:", err)
+			d.Set("read_results", nil)
 			return diag.FromErr(err)
 		}
+		// Append the row data to the query result array
 		queryResult = append(queryResult, rowData)
 	}
 
 	if err := rows.Close(); err != nil {
+		d.Set("read_results", nil)
 		return diag.FromErr(err)
 	}
 
-	log.Print("[DEBUG] queryResult ", queryResult)
+	log.Print("[DEBUG] raw query result: ", queryResult)
+
+	// Marshal the query read_results to JSON
 	marshalledResult, err := json.Marshal(queryResult)
 	if err != nil {
+		d.Set("read_results", nil)
 		return diag.FromErr(err)
 	}
 
-	log.Print("[DEBUG] marshalledResult ", string(marshalledResult))
-	if err := d.Set("results", string(marshalledResult)); err != nil {
-		return diag.FromErr(err)
-	}
+	log.Print("[DEBUG] marshalled query result: ", string(marshalledResult))
+
+	d.Set("read_results", string(marshalledResult))
 
 	return diags
 }
 
 func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 
 	_, ok := d.GetOk("update.0.statements")
 	if !ok {
 		d.Set("update", nil)
-		return nil
+		return resourceExecRead(ctx, d, m)
 	}
 
 	if !d.HasChange("update.0.statements") {
-		return nil
+		return resourceExecRead(ctx, d, m)
 	}
 
+	// Execute the 'update' statements
 	db := m.(*sql.DB)
 	multiStmt, numOfStmts := parseLifecycleSchemaData("update", d)
-
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
 	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	return diags
+	return resourceExecRead(ctx, d, m)
 }
 
 func resourceExecDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	// Execute the 'delete' statements
 	db := m.(*sql.DB)
 	multiStmt, numOfStmts := parseLifecycleSchemaData("delete", d)
-
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
 	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+
 	if err != nil {
 		return diag.FromErr(err)
 	}

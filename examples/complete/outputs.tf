@@ -1,6 +1,6 @@
-output "results" {
+output "read_results" {
   description = "The SnowSQL query result from the read statements."
-  value       = try(jsondecode(nonsensitive(snowsql_exec.role_grant_all.results)), null)
+  value       = try(jsondecode(nonsensitive(snowsql_exec.role_grant_all.read_results)), null)
 }
 
 output "snowsql_create_statements" {

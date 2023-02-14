@@ -24,23 +24,23 @@ description: |-
 ### Optional
 
 - `read` (Block List, Max: 1) Specifies the SnowSQL read lifecycle. (see [below for nested schema](#nestedblock--read))
-- `results` (String) The read query results.
 - `update` (Block List, Max: 1) Specifies the SnowSQL update lifecycle. (see [below for nested schema](#nestedblock--update))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `read_results` (String, Sensitive) The List of read query results.
 
 <a id="nestedblock--create"></a>
 ### Nested Schema for `create`
 
 Required:
 
-- `statements` (String) A string containing one or many SnowSQL statements separated by semicolons.
+- `statements` (String) A string containing one or many SnowSQL statements separated by semicolons. it's worth noting that splitting queries in this way is not always reliable since some SQL statements (e.g., CREATE FUNCTION) can contain semicolons within the statement itself.
 
 Optional:
 
-- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `None` which will dynamically count the number semicolons in SnowSQL statements.
+- `number_of_statements` (Number) A string containing one or many SnowSQL statements separated by semicolons. it's worth noting that splitting queries in this way is not always reliable since some SQL statements (e.g., CREATE FUNCTION) can contain semicolons within the statement itself.
 
 
 <a id="nestedblock--delete"></a>
@@ -52,7 +52,7 @@ Required:
 
 Optional:
 
-- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `None` which will dynamically count the number semicolons in SnowSQL statements.
+- `number_of_statements` (Number) Specifies the number of SnowSQL statements. If not provided, the default value is the count of semicolons in SnowSQL statements.
 
 
 <a id="nestedblock--read"></a>
@@ -64,7 +64,7 @@ Required:
 
 Optional:
 
-- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `None` which will dynamically count the number semicolons in SnowSQL statements.
+- `number_of_statements` (Number) Specifies the number of SnowSQL statements. If not provided, the default value is the count of semicolons in SnowSQL statements.
 
 
 <a id="nestedblock--update"></a>
@@ -76,6 +76,6 @@ Required:
 
 Optional:
 
-- `number_of_statements` (Number) Specifies the number of SnowSQL statements. Defaults to `None` which will dynamically count the number semicolons in SnowSQL statements.
+- `number_of_statements` (Number) Specifies the number of SnowSQL statements. If not provided, the default value is the count of semicolons in SnowSQL statements.
 
 

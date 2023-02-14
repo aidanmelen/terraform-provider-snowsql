@@ -6,6 +6,7 @@ resource "snowsql_exec" "role" {
     statements = "CREATE ROLE IF NOT EXISTS ${local.name};"
   }
 
+  # query the snowflake object(s) during the resource create, update, and delete
   read {
     statements = "SHOW ROLES LIKE '${local.name}';" 
   }

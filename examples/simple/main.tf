@@ -8,7 +8,12 @@ resource "snowsql_exec" "role" {
 
   # query the snowflake object(s) during the resource create, update, and delete
   read {
-    statements = "SHOW ROLES LIKE '${local.name}';" 
+    # statements = "SHOW ROLES LIKE '${local.name}';" 
+    statements = <<-EOT
+      SHOW ROLES LIKE '${local.name}';
+      SHOW ROLES 
+        LIKE 'SYSADMIN';
+    EOT
   }
 
   # uncomment to alter the snowflake object(s) during the in-place resource change

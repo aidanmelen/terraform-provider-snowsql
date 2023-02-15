@@ -174,34 +174,45 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return nil
 	}
 
-	// Execute the `read` query statements
-	db := m.(*sql.DB)
-	sdb := sqlx.NewDb(db, "snowflake").Unsafe()
-	rows, err := sdb.Queryx(readStmts)
+	// Split the input string into separate queries
+	queries := strings.Split(readStmts, ";")
 
-	if err != nil {
-		fmt.Println("Error running query:", err)
-		d.Set("read_results", nil)
-		return diags
-	}
-
-	// Loop through the query result rows
+	// Execute each query and append the results to the queryResult array
 	var queryResult []map[string]interface{}
-	for rows.Next() {
-		rowData := make(map[string]interface{})
-		err := rows.MapScan(rowData)
-		if err != nil {
-			fmt.Println("Error scanning row:", err)
-			d.Set("read_results", nil)
-			return diag.FromErr(err)
+	for _, query := range queries {
+		query = strings.TrimSpace(query)
+		if query == "" {
+			continue
 		}
-		// Append the row data to the query result array
-		queryResult = append(queryResult, rowData)
-	}
 
-	if err := rows.Close(); err != nil {
-		d.Set("read_results", nil)
-		return diag.FromErr(err)
+		// Execute the query
+		db := m.(*sql.DB)
+		sdb := sqlx.NewDb(db, "snowflake").Unsafe()
+		rows, err := sdb.Queryx(query)
+
+		if err != nil {
+			fmt.Println("Error running query:", err)
+			d.Set("read_results", nil)
+			return diags
+		}
+
+		// Loop through the query result rows
+		for rows.Next() {
+			rowData := make(map[string]interface{})
+			err := rows.MapScan(rowData)
+			if err != nil {
+				fmt.Println("Error scanning row:", err)
+				d.Set("read_results", nil)
+				return diag.FromErr(fmt.Errorf("Error scanning row: %s", err))
+			}
+			// Append the row data to the query result array
+			queryResult = append(queryResult, rowData)
+		}
+
+		if err := rows.Close(); err != nil {
+			d.Set("read_results", nil)
+			return diag.FromErr(fmt.Errorf("Error closing rows: %s", err))
+		}
 	}
 
 	log.Print("[DEBUG] raw query result: ", queryResult)
@@ -210,7 +221,7 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	marshalledResult, err := json.Marshal(queryResult)
 	if err != nil {
 		d.Set("read_results", nil)
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("Error marshalling result: %s", err))
 	}
 
 	log.Print("[DEBUG] marshalled query result: ", string(marshalledResult))

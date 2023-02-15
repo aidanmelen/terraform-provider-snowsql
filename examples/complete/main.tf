@@ -1,6 +1,7 @@
 ###############################################################################
 # Snowflake
 ###############################################################################
+
 resource "snowflake_database" "database" {
   name = local.name
 }
@@ -12,6 +13,7 @@ resource "snowflake_role" "role" {
 ###############################################################################
 # SnowSQL
 ###############################################################################
+
 resource "snowsql_exec" "role_grant_all" {
   name = local.name
 
@@ -36,7 +38,10 @@ resource "snowsql_exec" "role_grant_all" {
   }
 
   read {
-    statements = "SHOW GRANTS ON ROLE ${local.name};"
+    statements = <<-EOT
+      SHOW GRANTS TO ROLE ${local.name};
+      SHOW FUTURE GRANTS TO ROLE ${local.name};
+    EOT
   }
 
   # revoke all grants during the resource destruction

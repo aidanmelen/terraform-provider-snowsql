@@ -3,6 +3,11 @@ output "read_results" {
   value       = try(jsondecode(nonsensitive(snowsql_exec.role_grant_all.read_results)), null)
 }
 
+output "read_results_string" {
+  description = "The SnowSQL query result from the read statements."
+  value       = nonsensitive(snowsql_exec.role_grant_all.read_results)
+}
+
 output "snowsql_create_statements" {
   description = "The SnowSQL statements executed during the first terraform apply."
   value       = snowsql_exec.role_grant_all.create.0.statements
@@ -10,14 +15,13 @@ output "snowsql_create_statements" {
 
 output "snowsql_read_statements" {
   description = "The optional SnowSQL query statements that will be execute during every terraform apply."
-  value       = try(snowsql_exec.role.read.0.statements, null)
+  value       = try(snowsql_exec.role_grant_all.read.0.statements, null)
 }
 
 output "snowsql_update_statements" {
   description = "The optional SnowSQL statements that will be execute as in-place changes after the first terraform apply."
   value       = try(snowsql_exec.role_grant_all.update.0.statements, null)
 }
-
 
 output "snowsql_delete_statements" {
   description = "The SnowSQL statements that will be executed during terraform destroy."

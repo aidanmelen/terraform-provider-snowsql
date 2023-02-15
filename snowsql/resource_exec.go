@@ -149,17 +149,19 @@ func parseLifecycleSchemaData(lifecycle string, d *schema.ResourceData) (string,
 
 func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
+	createStmts := d.Get("create.0.statements")
+
 	// Execute the `create` statements
 	db := m.(*sql.DB)
-	name := d.Get("name").(string)
 	multiStmt, numOfStmts := parseLifecycleSchemaData("create", d)
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
 	_, err := db.ExecContext(multiStmtCtx, multiStmt)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("failed to execute the create statements.\n\nStatements:\n\n  %s\n\n%s", createStmts, err))
 	}
 
+	name := d.Get("name").(string)
 	d.SetId(name)
 
 	return resourceExecRead(ctx, d, m)
@@ -191,27 +193,27 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		rows, err := sdb.Queryx(query)
 
 		if err != nil {
-			fmt.Println("Error running query:", err)
+			d.Set("read", nil)
 			d.Set("read_results", nil)
-			return diags
+			return diag.FromErr(fmt.Errorf("failed to execute the read statements.\n\nQuery:\n\n  %s\n\n%s", query, err))
 		}
 
 		// Loop through the query result rows
 		for rows.Next() {
-			rowData := make(map[string]interface{})
-			err := rows.MapScan(rowData)
+			row := make(map[string]interface{})
+			err := rows.MapScan(row)
 			if err != nil {
-				fmt.Println("Error scanning row:", err)
+				d.Set("read", nil)
 				d.Set("read_results", nil)
-				return diag.FromErr(fmt.Errorf("Error scanning row: %s", err))
+				return diag.FromErr(fmt.Errorf("failed to scan row resulting from one of the read statements.\n\nQuery:\n\n  %s\n\tRow:\n\n  %s\n\n%s", query, row, err))
 			}
-			// Append the row data to the query result array
-			queryResult = append(queryResult, rowData)
+			queryResult = append(queryResult, row)
 		}
 
 		if err := rows.Close(); err != nil {
+			d.Set("read", nil)
 			d.Set("read_results", nil)
-			return diag.FromErr(fmt.Errorf("Error closing rows: %s", err))
+			return diag.FromErr(fmt.Errorf("failed to close rows after executing one of the read statements.\n\nQuery:\n\n  %s\n\n%s", query, err))
 		}
 	}
 
@@ -220,8 +222,9 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	// Marshal the query read_results to JSON
 	marshalledResult, err := json.Marshal(queryResult)
 	if err != nil {
+		d.Set("read", nil)
 		d.Set("read_results", nil)
-		return diag.FromErr(fmt.Errorf("Error marshalling result: %s", err))
+		return diag.FromErr(fmt.Errorf("failed to marshal resulting rows after executing the read statements.\n\nQueries:\n\n  %s\nResult:\n\n  %s\n\n%s", readStmts, queryResult, err))
 	}
 
 	log.Print("[DEBUG] marshalled query result: ", string(marshalledResult))
@@ -233,7 +236,7 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	_, ok := d.GetOk("update.0.statements")
+	updateStmts, ok := d.GetOk("update.0.statements")
 	if !ok {
 		d.Set("update", nil)
 		return resourceExecRead(ctx, d, m)
@@ -250,7 +253,7 @@ func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	_, err := db.ExecContext(multiStmtCtx, multiStmt)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("failed to execute the update statements.\n\nStatements:\n\n  %s\n\n%s", updateStmts, err))
 	}
 
 	return resourceExecRead(ctx, d, m)
@@ -259,6 +262,8 @@ func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface
 func resourceExecDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	deleteStmts := d.Get("delete.0.statements")
+
 	// Execute the 'delete' statements
 	db := m.(*sql.DB)
 	multiStmt, numOfStmts := parseLifecycleSchemaData("delete", d)
@@ -266,7 +271,7 @@ func resourceExecDelete(ctx context.Context, d *schema.ResourceData, m interface
 	_, err := db.ExecContext(multiStmtCtx, multiStmt)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("failed to execute the delete statements.\n\nStatements:\n\n  %s\n\n%s", deleteStmts, err))
 	}
 
 	d.SetId("")

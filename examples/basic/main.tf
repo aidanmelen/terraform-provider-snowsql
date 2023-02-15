@@ -8,18 +8,13 @@ resource "snowsql_exec" "role" {
 
   # query the snowflake object(s) during the resource create, update, and delete
   read {
-    # statements = "SHOW ROLES LIKE '${local.name}';" 
-    statements = <<-EOT
-      SHOW ROLES LIKE '${local.name}';
-      SHOW ROLES 
-        LIKE 'SYSADMIN';
-    EOT
+    statements = "SHOW ROLES LIKE '${local.name}';"
   }
 
   # uncomment to alter the snowflake object(s) during the in-place resource change
-  update {
-    statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform';"
-  }
+  # update {
+  #   statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform';"
+  # }
 
   # drop the snowflake object(s) during the resource destruction
   delete {

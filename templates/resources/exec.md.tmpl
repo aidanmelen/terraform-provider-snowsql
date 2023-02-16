@@ -25,9 +25,9 @@ resource "snowsql_exec" "role" {
 }
 ```
 
--> **NOTE on create statements:** We recommend testing the SnowSQL statements in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to automating with Terraform.
+-> **NOTE on `create` statements:** We recommend testing all SnowSQL statements in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to automating with Terraform.
 
-~> **NOTE on delete statements:** Failure to ensure that delete statements negate create statements will lead to orphaned snowflake objects.
+~> **NOTE on `delete` statements:** Failure to ensure that `delete` statements negate `create` statements will lead to orphaned snowflake objects.
 
 ## Example Multi-line Statement Usage
 

@@ -1,0 +1,79 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Basic Usage
+
+{{ tffile "examples/resources/exec/basic/main.tf" }}
+
+## Example Multi-Statement Usage
+
+{{ tffile "examples/resources/exec/complete/main.tf" }}
+
+## Avoiding Replacement
+
+Any changes to the `create` statements will cause a replacement change. 
+Adding or changing the `update` statements will result in an in-place change with the execution of the `update` statement.
+
+1. The `create` statements are run on the first apply:
+
+    ```terraform
+    resource "snowsql_exec" "role" {
+      name = "my_role"
+
+      create {
+        statements = "CREATE ROLE IF NOT EXISTS my_role;"
+      }
+
+      read {
+        statements = "SHOW ROLES LIKE 'my_role';"
+      }
+
+      delete {
+        statements = "DROP ROLE IF EXISTS my_role;"
+      }
+    }
+    ```
+
+2. Add the `update` statements to alter the role in-place.
+
+    ```terraform
+    resource "snowsql_exec" "role" {
+      name = "my_role"
+
+      create {
+        statements = "CREATE ROLE IF NOT EXISTS my_role;"
+      }
+
+      read {
+        statements = "SHOW ROLES LIKE 'my_role';"
+      }
+
+      update {
+        statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform';"
+      }
+
+      delete {
+        statements = "DROP ROLE IF EXISTS my_role;"
+      }
+    }
+    ```
+
+    **NOTE** the `create` statements are only executed on creation or when the statements change.
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import snowsql_exec.name name
+```

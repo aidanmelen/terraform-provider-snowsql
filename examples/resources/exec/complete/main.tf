@@ -1,7 +1,3 @@
-###############################################################################
-# Snowflake
-###############################################################################
-
 resource "snowflake_database" "database" {
   name = local.name
 }
@@ -10,14 +6,10 @@ resource "snowflake_role" "role" {
   name = local.name
 }
 
-###############################################################################
-# SnowSQL
-###############################################################################
-
 resource "snowsql_exec" "role_grant_all" {
   name = local.name
 
-  # grant all privileges on all and future objects during the resource creation
+  # grant all privileges on all (future) objects during the resource creation
   create {
     statements = <<-EOT
       GRANT ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
@@ -37,6 +29,7 @@ resource "snowsql_exec" "role_grant_all" {
     EOT
   }
 
+  # read all (future) grants to role
   read {
     statements = <<-EOT
       SHOW GRANTS TO ROLE ${local.name};
@@ -44,7 +37,7 @@ resource "snowsql_exec" "role_grant_all" {
     EOT
   }
 
-  # revoke all grants during the resource destruction
+  # revoke all (future) grants during the resource destruction
   delete {
     statements = <<-EOT
       REVOKE ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};

@@ -11,15 +11,56 @@ description: |-
 
 ## Example Basic Usage
 
-{{ tffile "examples/resources/exec/basic/main.tf" }}
+```terraform
+resource "snowsql_exec" "role" {
+  name = "my_role"
 
-## Example Multi-Statement Usage
+  create {
+    statements = "CREATE ROLE IF NOT EXISTS my_role;"
+  }
+
+  delete {
+    statements = "DROP ROLE IF EXISTS my_role;"
+  }
+}
+```
+
+-> **NOTE on create statements:** We recommend testing the SnowSQL statements in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to automating with Terraform.
+
+~> **NOTE on delete statements:** Failure to ensure that delete statements negate create statements will lead to orphaned snowflake objects.
+
+## Example Multi-line Statement Usage
+
+The `snowsql_exec` supports multi-line statements.
+
+```terraform
+resource "snowsql_exec" "role" {
+  name = "my_role"
+
+  create {
+    statements = <<-EOT
+      CREATE ROLE IF NOT EXISTS my_role
+          WITH COMMENT = 'created with terraform';
+    EOT
+  }
+
+  delete {ts will result in an in-place change
+    statements = "DROP ROLE IF EXISTS my_role;"
+  }
+}
+```
+
+## Example Multi-Statements Usage
+
+The `snowsql_exec` support multi-statements when separated with semicolons.
 
 {{ tffile "examples/resources/exec/complete/main.tf" }}
 
 ## Avoiding Replacement
 
-Any changes to the `create` statements will cause a replacement change. Adding or changing the `update` statements will result in an in-place change with the execution of the `update` statement.
+Any changes to the `create` statements will cause a replacement change. Adding or changing the optional `update` statements after the first terraform apply will cause an in-place change with the execution of the `update` statement. For example:
+
+-> **NOTE on create statements** The `create` statements are only executed on creation or when the `create` statements change.
 
 1. The `create` statements are run on the first apply:
 
@@ -64,8 +105,6 @@ Any changes to the `create` statements will cause a replacement change. Adding o
       }
     }
     ```
-
-    **NOTE** the `create` statements are only executed on creation or when the statements change.
 
 {{ .SchemaMarkdown | trimspace }}
 

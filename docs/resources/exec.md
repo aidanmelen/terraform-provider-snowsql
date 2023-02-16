@@ -23,6 +23,10 @@ resource "snowsql_exec" "role" {
     statements = "SHOW ROLES LIKE '${local.name}';"
   }
 
+  update {
+    statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform';"
+  }
+
   delete {
     statements = "DROP ROLE IF EXISTS ${local.name};"
   }
@@ -72,19 +76,19 @@ resource "snowsql_exec" "role_grant_all" {
   delete {
     statements = <<-EOT
       REVOKE ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON ALL VIEWS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON ALL FILE FORMATS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON ALL STREAMS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON ALL PROCEDURES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON FUTURE TABLES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON FUTURE VIEWS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON FUTURE FILE FORMATS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON FUTURE SEQUENCES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON FUTURE FUNCTIONS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON FUTURE STREAMS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
-			REVOKE ALL PRIVILEGES ON FUTURE PROCEDURES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON ALL VIEWS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON ALL FILE FORMATS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON ALL STREAMS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON ALL PROCEDURES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON FUTURE TABLES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON FUTURE VIEWS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON FUTURE FILE FORMATS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON FUTURE SEQUENCES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON FUTURE FUNCTIONS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON FUTURE STREAMS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
+      REVOKE ALL PRIVILEGES ON FUTURE PROCEDURES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
     EOT
   }
 }
@@ -92,8 +96,7 @@ resource "snowsql_exec" "role_grant_all" {
 
 ## Avoiding Replacement
 
-Any changes to the `create` statements will cause a replacement change. 
-Adding or changing the `update` statements will result in an in-place change with the execution of the `update` statement.
+Any changes to the `create` statements will cause a replacement change. Adding or changing the `update` statements will result in an in-place change with the execution of the `update` statement.
 
 1. The `create` statements are run on the first apply:
 
@@ -140,6 +143,91 @@ Adding or changing the `update` statements will result in an in-place change wit
     ```
 
     **NOTE** the `create` statements are only executed on creation or when the statements change.
+
+## Continuous Updates
+
+Use the [The lifecycle Meta-Argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) to ignore changes to the create statements.
+
+```terraform
+resource "snowflake_database" "database" {
+  name = "my_database"
+}
+
+resource "snowflake_schema" "schema" {
+  name     = "my_schema"
+  database = snowflake_database.database.name
+}
+
+resource "snowflake_table" "target_table" {
+  name     = "target_table"
+  database = snowflake_database.database.name
+  schema   = snowflake_schema.schema.name
+
+  column {
+    name = "id"
+    type = "INTEGER"
+  }
+
+  column {
+    name = "description"
+    type = "VARCHAR"
+  }
+}
+
+resource "snowflake_table" "source_table" {
+  name     = "source_table"
+  database = snowflake_database.database.name
+  schema   = snowflake_schema.schema.name
+
+  column {
+    name = "id"
+    type = "INTEGER"
+  }
+
+  column {
+    name = "description"
+    type = "VARCHAR"
+  }
+}
+
+locals {
+  merge_create_and_update = <<-EOT
+    MERGE INTO target_table USING source_table 
+        ON target_table.id = source_table.id
+        WHEN MATCHED THEN 
+            UPDATE SET target_table.description = source_table.description;
+  EOT
+}
+
+resource "snowsql_exec" "merge" {
+  name = "my_merge"
+
+  create {
+    statements = local.merge_create_and_update
+  }
+
+  read {
+    statements = <<-EOT
+      SELECT * FROM target_table;
+      SELECT * FROM source_table;
+  }
+
+  update {
+    statements = local.merge_create_and_update
+
+  delete {
+    statements = "DROP ROLE IF EXISTS my_role;"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to create, e.g. because create statement changes
+      # cause a forced replacement.
+      create,
+    ]
+  }
+}
+```
 
 <!-- schema generated by tfplugindocs -->
 ## Schema

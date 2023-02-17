@@ -29,7 +29,7 @@ resource "snowsql_exec" "role" {
 
 -> **NOTE:** It is highly recommended to test all SnowSQL statements, especially `create` and `delete` statements, in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
 
-~> **NOTE:** It is important to ensure that any `delete` statements negate any corresponding `create` statements, to avoid any orphaned Snowflake objects. Failure to do so can result in clutter and potential issues within your Snowflake environment.
+!> **WARNING:** It is important to ensure that any `delete` statements negate any corresponding `create` statements, to avoid any orphaned Snowflake objects. Failure to do so can result in clutter and potential issues within your Snowflake environment.
 
 ### Query Snowflake With Read Statements
 

@@ -42,4 +42,4 @@ $ terraform init && terraform apply
 
 ## Credits
 
-see [CREDITS](CREDITS) for more information.
+see [CREDITS](CREDITS.md) for more information.

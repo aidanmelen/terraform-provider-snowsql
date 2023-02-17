@@ -43,7 +43,7 @@ No modules.
 | [random_pet.name](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/pet) | resource |
 | [snowflake_database.database](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/database) | resource |
 | [snowflake_role.role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role) | resource |
-| [snowsql_exec.grant_all](https://registry.terraform.io/providers/aidanmelen/snowsql/latest/docs/resources/exec) | resource |
+| [snowsql_exec.role_grant_all](https://registry.terraform.io/providers/aidanmelen/snowsql/latest/docs/resources/exec) | resource |
 
 ## Inputs
 

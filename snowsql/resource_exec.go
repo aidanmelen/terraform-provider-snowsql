@@ -15,7 +15,7 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-var numberOfStatementsDescription = "A string containing one or many SnowSQL statements separated by semicolons. it's worth noting that splitting queries in this way is not always reliable since some SQL statements (e.g., CREATE FUNCTION) can contain semicolons within the statement itself."
+var numberOfStatementsDescription = "A string containing one or many SnowSQL statements separated by semicolons."
 
 var createLifecycleSchema = map[string]*schema.Schema{
 	"statements": {
@@ -121,7 +121,7 @@ func resourceExec() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   true,
-				Description: "The List of read query results.",
+				Description: "The List of query results from the read statements.",
 			},
 		},
 		CustomizeDiff: customdiff.All(

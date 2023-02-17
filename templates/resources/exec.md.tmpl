@@ -7,9 +7,11 @@ description: |-
 
 # {{.Name}} ({{.Type}})
 
-{{ .Description | trimspace }}
+The `snowsql_exec` resource allows for the management of the `create`, `read`, `update`, and `delete` lifecycles for [Snowflake](https://www.snowflake.com) objects using [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql.html).
 
-## Example Basic Usage
+## Examples
+
+This example shows how to `create` and `delete` a Snowflake role with the `snowsql_exec` resource.
 
 ```terraform
 resource "snowsql_exec" "role" {
@@ -25,86 +27,115 @@ resource "snowsql_exec" "role" {
 }
 ```
 
--> **NOTE on `create` statements:** We recommend testing all SnowSQL statements in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to automating with Terraform.
+-> **NOTE on create statements:** It is highly recommended to test all SnowSQL statements, especially `create` and `delete` statements, in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
 
-~> **NOTE on `delete` statements:** Failure to ensure that `delete` statements negate `create` statements will lead to orphaned snowflake objects.
+~> **NOTE on delete statements:** It is important to ensure that any `delete` statements negate any corresponding `create` statements, to avoid any orphaned Snowflake objects. Failure to do so can result in clutter and potential issues within your Snowflake environment.
 
-## Example Multi-line Statement Usage
+### Query Snowflake With Read Statements
 
-The `snowsql_exec` supports multi-line statements.
+The `snowsql_exec` resource allows you to execute arbitrary Snowflake SQL queries from Terraform, and use the results in your infrastructure management. When using the `read` statements in the resource, the result(s) of the SQL query/queries will be available in the `read_results` attribute as a sensitive raw JSON string. 
+
+To output the query results in a non-sensitive format to the console, you can use the `nonsensitive` function to mark the `read_results` value as non-sensitive before decoding it with the `jsondecode` function.
 
 ```terraform
 resource "snowsql_exec" "role" {
   name = "my_role"
 
   create {
-    statements = <<-EOT
-      CREATE ROLE IF NOT EXISTS my_role
-          WITH COMMENT = 'created with terraform';
-    EOT
+    statements = "CREATE ROLE IF NOT EXISTS my_role;"
   }
 
-  delete {ts will result in an in-place change
+  read {
+    statements = "SHOW ROLES LIKE 'my_role';"
+  }
+
+  delete {
+    statements = "DROP ROLE IF EXISTS my_role;"
+  }
+}
+
+output "read_results" {
+  description = "The SnowSQL query result from the read statements."
+  value       = jsondecode(nonsensitive(snowsql_exec.role.read_results))
+}
+```
+
+This will output the JSON formatted results like this:
+
+```bash
+Outputs:
+
+read_results = [
+  {
+    "assigned_to_users" = "0"
+    "comment" = ""
+    "created_on" = "2023-02-16T18:47:48.756-08:00"
+    "granted_roles" = "0"
+    "granted_to_roles" = "0"
+    "is_current" = "N"
+    "is_default" = "N"
+    "is_inherited" = "N"
+    "name" = "BASIC_CIVIL_HALIBUT"
+    "owner" = "ACCOUNTADMIN"
+  },
+]
+```
+
+### Avoiding Replacement With Update Lifecycle
+
+This example demonstrates the behavior of the `snowsql_exec` resource when using the optional `update` statements to modify an existing object. If the `update` statements are added or changed after the initial terraform apply, Terraform will perform an in-place change by executing the `update` statement(s). On the other hand, any changes to the `create` statements will cause a replacement of the resource.
+
+1. The `create` statements are run on the first apply:
+
+```terraform
+resource "snowsql_exec" "role" {
+  name = "my_role"
+
+  create {
+    statements = "CREATE ROLE IF NOT EXISTS my_role;"
+  }
+
+  read {
+    statements = "SHOW ROLES LIKE 'my_role';"
+  }
+
+  delete {
     statements = "DROP ROLE IF EXISTS my_role;"
   }
 }
 ```
 
-## Example Multi-Statements Usage
+2. Add the `update` statements to alter the role in-place.
 
-The `snowsql_exec` support multi-statements when separated with semicolons.
+```terraform
+resource "snowsql_exec" "role" {
+  name = "my_role"
+
+  create {
+    statements = "CREATE ROLE IF NOT EXISTS my_role;"
+  }
+
+  read {
+    statements = "SHOW ROLES LIKE 'my_role';"
+  }
+
+  update {
+    statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform';"
+  }
+
+  delete {
+    statements = "DROP ROLE IF EXISTS my_role;"
+  }
+}
+```
+
+### Multi-Statements
+
+The `snowsql_exec` resource allows you to execute multiple SnowSQL statements. These statements can be separated by semicolons and/or spread across multiple lines for better readability. This is particularly useful for executing complex SnowSQL statements or managing multiple objects within a single `snowsql_exec` resource.
 
 {{ tffile "examples/resources/exec/complete/main.tf" }}
 
-## Avoiding Replacement
-
-Any changes to the `create` statements will cause a replacement change. Adding or changing the optional `update` statements after the first terraform apply will cause an in-place change with the execution of the `update` statement. For example:
-
--> **NOTE on create statements** The `create` statements are only executed on creation or when the `create` statements change.
-
-1. The `create` statements are run on the first apply:
-
-    ```terraform
-    resource "snowsql_exec" "role" {
-      name = "my_role"
-
-      create {
-        statements = "CREATE ROLE IF NOT EXISTS my_role;"
-      }
-
-      read {
-        statements = "SHOW ROLES LIKE 'my_role';"
-      }
-
-      delete {
-        statements = "DROP ROLE IF EXISTS my_role;"
-      }
-    }
-    ```
-
-2. Add the `update` statements to alter the role in-place.
-
-    ```terraform
-    resource "snowsql_exec" "role" {
-      name = "my_role"
-
-      create {
-        statements = "CREATE ROLE IF NOT EXISTS my_role;"
-      }
-
-      read {
-        statements = "SHOW ROLES LIKE 'my_role';"
-      }
-
-      update {
-        statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform';"
-      }
-
-      delete {
-        statements = "DROP ROLE IF EXISTS my_role;"
-      }
-    }
-    ```
+~> **NOTE on multi-statements:** While it may be tempting to manage multiple statements with a single `snowsql_exec` resource, it can make it much harder to managed the resource in the future, as well as potentially causing issues if the resource needs to be rolled back. It is recommended to separate multiple statements into separate resources where possible.
 
 {{ .SchemaMarkdown | trimspace }}
 

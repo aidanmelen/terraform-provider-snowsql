@@ -6,10 +6,10 @@ resource "snowsql_exec" "role" {
   }
 
   read {
-    statements = "SHOW ROLES LIKE '${local.name}';"
+    statements = "SHOW ROLES LIKE '${local.name}'"
   }
 
-  # uncomment after the first apply to update the role in-place
+  # uncomment after the first apply to update the role
   # update {
   #   statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform';"
   # }
@@ -18,3 +18,4 @@ resource "snowsql_exec" "role" {
     statements = "DROP ROLE IF EXISTS ${local.name};"
   }
 }
+

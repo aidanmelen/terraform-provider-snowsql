@@ -27,9 +27,9 @@ resource "snowsql_exec" "role" {
 }
 ```
 
--> **NOTE on create statements:** It is highly recommended to test all SnowSQL statements, especially `create` and `delete` statements, in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
+-> **NOTE:** It is highly recommended to test all SnowSQL statements, especially `create` and `delete` statements, in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
 
-~> **NOTE on delete statements:** It is important to ensure that any `delete` statements negate any corresponding `create` statements, to avoid any orphaned Snowflake objects. Failure to do so can result in clutter and potential issues within your Snowflake environment.
+~> **NOTE:** It is important to ensure that any `delete` statements negate any corresponding `create` statements, to avoid any orphaned Snowflake objects. Failure to do so can result in clutter and potential issues within your Snowflake environment.
 
 ### Query Snowflake With Read Statements
 
@@ -131,11 +131,51 @@ resource "snowsql_exec" "role" {
 
 ### Multi-Statements
 
-The `snowsql_exec` resource allows you to execute multiple SnowSQL statements. These statements can be separated by semicolons and/or spread across multiple lines for better readability. This is particularly useful for executing complex SnowSQL statements or managing multiple objects within a single `snowsql_exec` resource.
+The `snowsql_exec` resource allows you to execute multiple SnowSQL statements separated by semicolons. This is particularly useful for managing multiple Snowflake objects within a single `snowsql_exec` resource.
 
 {{ tffile "examples/resources/exec/complete/main.tf" }}
 
-~> **NOTE on multi-statements:** While it may be tempting to manage multiple statements with a single `snowsql_exec` resource, it can make it much harder to managed the resource in the future, as well as potentially causing issues if the resource needs to be rolled back. It is recommended to separate multiple statements into separate resources where possible.
+-> **NOTE:** Please see the snowflakedb documentation for [Executing Multiple Statements in One Call](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call) for more information.
+
+~> **NOTE:** While it may be tempting to manage multiple statements with a single `snowsql_exec` resource, it can make it much harder to managed the resource in the future, as well as potentially causing issues if the resource needs to be rolled back. It is recommended to separate multiple statements into separate resources where possible.
+
+### Multi-line Statements
+
+All `snowsql_exec` resource statements can be formatted across multiple lines for better readability. This is particularly useful for executing complex SnowSQL statements.
+
+```terraform
+resource "snowsql_exec" "function" {
+  name = local.name
+
+  create {
+    statements = <<-EOT
+      CREATE OR REPLACE FUNCTION ${snowflake_database.database.name}.PUBLIC.JS_FACTORIAL(f FLOAT)
+        RETURNS FLOAT
+        LANGUAGE JAVASCRIPT
+        STRICT
+        AS '
+        if (D <= 0) {
+          return 1;
+        } else {
+          var result = 1;
+          for (var i = 2; i <= D; i++) {
+            result = result * i;
+          }
+          return result;
+        }
+        ';
+    EOT
+  }
+
+  read {
+    statements = "SHOW USER FUNCTIONS LIKE 'JS_FACTORIAL' IN DATABASE ${snowflake_database.database.name};"
+  }
+
+  delete {
+    statements = "DROP FUNCTION IF EXISTS ${snowflake_database.database.name}.PUBLIC.JS_FACTORIAL(FLOAT);"
+  }
+}
+```
 
 {{ .SchemaMarkdown | trimspace }}
 

@@ -122,7 +122,7 @@ func TestAccRead(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowsql_exec.role", "name", accName),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s;", accName)),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "read.0.statements", fmt.Sprintf("SHOW ROLES LIKE '%s';\nSHOW ROLES LIKE 'SYSADMIN';\n", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "read.0.statements", fmt.Sprintf("SHOW ROLES LIKE '%s';\nSHOW ROLES \n\tLIKE 'SYSADMIN';\n", accName)),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "update.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s;", accName)),
 					resource.TestCheckResourceAttrSet("snowsql_exec.role", "read_results"),

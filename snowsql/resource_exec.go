@@ -15,7 +15,7 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-var numberOfStatementsDescription = "A string containing one or many SnowSQL statements separated by semicolons."
+var numberOfStatementsDescription = "A string containing one or many SnowSQL statements separated by semicolons. This can help reduce the risk of SQL injection attacks."
 
 var createLifecycleSchema = map[string]*schema.Schema{
 	"statements": {

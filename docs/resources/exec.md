@@ -258,11 +258,11 @@ resource "snowsql_exec" "function" {
 
 Required:
 
-- `statements` (String) A string containing one or many SnowSQL statements separated by semicolons.
+- `statements` (String) A string containing one or many SnowSQL statements separated by semicolons. This can help reduce the risk of SQL injection attacks.
 
 Optional:
 
-- `number_of_statements` (Number) A string containing one or many SnowSQL statements separated by semicolons.
+- `number_of_statements` (Number) A string containing one or many SnowSQL statements separated by semicolons. This can help reduce the risk of SQL injection attacks.
 
 
 <a id="nestedblock--delete"></a>

@@ -31,7 +31,7 @@ $ make install
 Then, navigate to the `examples` directory.
 
 ```shell
-$ cd examples/simple
+$ cd examples/resources/exec/basic
 ```
 
 Run the following command to initialize the workspace and apply the sample configuration.

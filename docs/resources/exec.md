@@ -55,7 +55,7 @@ resource "snowsql_exec" "role" {
 }
 
 output "read_results" {
-  description = "The SnowSQL query result from the read statements."
+  description = "The SnowSQL query results from the read statements."
   value       = jsondecode(nonsensitive(snowsql_exec.role.read_results))
 }
 ```
@@ -89,18 +89,14 @@ This example demonstrates the behavior of the `snowsql_exec` resource when using
 
 ```terraform
 resource "snowsql_exec" "role" {
-  name = "my_role"
+  name = local.name
 
   create {
     statements = "CREATE ROLE IF NOT EXISTS my_role;"
   }
 
-  read {
-    statements = "SHOW ROLES LIKE 'my_role';"
-  }
-
   delete {
-    statements = "DROP ROLE IF EXISTS my_role;"
+    statements = "DROP ROLE IF EXISTS ${local.name};"
   }
 }
 ```
@@ -109,22 +105,18 @@ resource "snowsql_exec" "role" {
 
 ```terraform
 resource "snowsql_exec" "role" {
-  name = "my_role"
+  name = local.name
 
   create {
-    statements = "CREATE ROLE IF NOT EXISTS my_role;"
-  }
-
-  read {
-    statements = "SHOW ROLES LIKE 'my_role';"
+    statements = "CREATE ROLE IF NOT EXISTS ${local.name};"
   }
 
   update {
-    statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform';"
+    statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform';"
   }
 
   delete {
-    statements = "DROP ROLE IF EXISTS my_role;"
+    statements = "DROP ROLE IF EXISTS ${local.name};"
   }
 }
 ```
@@ -225,11 +217,17 @@ resource "snowsql_exec" "function" {
   }
 
   read {
-    statements = "SHOW USER FUNCTIONS LIKE 'JS_FACTORIAL' IN DATABASE ${snowflake_database.database.name};"
+    statements = <<-EOT
+      SHOW USER FUNCTIONS LIKE 'JS_FACTORIAL' 
+        IN DATABASE ${snowflake_database.database.name};
+    EOT
   }
 
   delete {
-    statements = "DROP FUNCTION IF EXISTS ${snowflake_database.database.name}.PUBLIC.JS_FACTORIAL(FLOAT);"
+    statements = <<-EOT
+      DROP FUNCTION IF EXISTS 
+        ${snowflake_database.database.name}.PUBLIC.JS_FACTORIAL(FLOAT);
+    EOT
   }
 }
 ```

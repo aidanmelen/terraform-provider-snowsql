@@ -1,0 +1,20 @@
+resource "snowsql_exec" "role" {
+  name = "my_role"
+
+  create {
+    statements = "CREATE ROLE IF NOT EXISTS my_role;"
+  }
+
+  read {
+    statements = "SHOW ROLES LIKE 'my_role';"
+  }
+
+  delete {
+    statements = "DROP ROLE IF EXISTS my_role;"
+  }
+}
+
+output "read_results" {
+  description = "The SnowSQL query results from the read statements."
+  value       = jsondecode(nonsensitive(snowsql_exec.role.read_results))
+}

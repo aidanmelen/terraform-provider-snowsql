@@ -1,6 +1,6 @@
 module terraform-provider-snowsql
 
-go 1.17
+go 1.18
 
 require (
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.54.0

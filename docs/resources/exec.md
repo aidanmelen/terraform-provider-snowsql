@@ -33,9 +33,7 @@ resource "snowsql_exec" "role" {
 
 ### Query Snowflake With Read Statements
 
-The `snowsql_exec` resource allows you to execute arbitrary Snowflake SQL queries from Terraform, and use the results in your infrastructure management. When using the read statements in the resource, the result(s) of the SQL query/queries will be available in the `read_results` attribute as a sensitive raw JSON string. 
-
-To output the query results in a non-sensitive format to the console, you can use the `nonsensitive` function to mark the `read_results` value as non-sensitive before decoding it with the `jsondecode` function.
+This resource allows you to execute arbitrary SnowSQL queries and use the results in your infrastructure management.
 
 ```terraform
 resource "snowsql_exec" "role" {
@@ -83,7 +81,7 @@ show_role_results = [
 
 ### Avoiding Replacement With Update Lifecycle
 
-This example demonstrates the behavior of the `snowsql_exec` resource when using the optional update statements to modify an existing object. If the update statements are added or changed after the initial terraform apply, Terraform will perform an in-place change by executing the update statement(s). On the other hand, any changes to the create statements will cause a replacement of the resource.
+Execute the update statements as an in-place Terraform change by adding or modifying them after the initial Terraform apply. However, if there are any changes to the create statements, the resource will need to be replaced.
 
 1. The create statements are run on the first apply:
 
@@ -127,7 +125,7 @@ resource "snowsql_exec" "role" {
 
 ### Multi-Statements
 
-This resource allows you to execute multiple SnowSQL statements separated by semicolons. This is particularly useful for managing multiple Snowflake objects within a single `snowsql_exec` resource.
+This resource allows you to execute multiple SnowSQL statements separated by semicolons. This is particularly useful for managing multiple Snowflake objects within a single resource.
 
 ```terraform
 resource "snowflake_database" "database" {
@@ -249,13 +247,13 @@ resource "snowsql_exec" "function" {
 The nested blocks all have the same arguments.
 
 - `statements` (Required) A string containing one or many SnowSQL statements separated by semicolons.
-- `number_of_statements` (Optional) Specifies the number of SnowSQL statements. This can help reduce the risk of SQL injection attacks.
+- `number_of_statements` (Optional) The number of SnowSQL statements. This can help reduce the risk of SQL injection attacks.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-- `read_results` (String, Sensitive) The List of query results from the read statements.
+- `read_results` (String) The encoded JSON list of query results from the read statements. This value is always marked as sensitive.
 
 ## Import
 

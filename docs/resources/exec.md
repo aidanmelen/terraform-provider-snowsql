@@ -156,6 +156,7 @@ resource "snowsql_exec" "role_grant_all" {
       GRANT ALL PRIVILEGES ON FUTURE STREAMS IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
       GRANT ALL PRIVILEGES ON FUTURE PROCEDURES IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
     EOT
+    number_of_statements = 14
   }
 
   read {
@@ -163,6 +164,7 @@ resource "snowsql_exec" "role_grant_all" {
       SHOW GRANTS TO ROLE ${local.name};
       SHOW FUTURE GRANTS TO ROLE ${local.name};
     EOT
+    number_of_statements = 2
   }
 
   delete {
@@ -182,6 +184,7 @@ resource "snowsql_exec" "role_grant_all" {
       REVOKE ALL PRIVILEGES ON FUTURE STREAMS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
       REVOKE ALL PRIVILEGES ON FUTURE PROCEDURES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
     EOT
+    number_of_statements = 14
   }
 }
 ```
@@ -247,7 +250,7 @@ resource "snowsql_exec" "function" {
 The nested blocks all have the same arguments.
 
 - `statements` (Required) A string containing one or many SnowSQL statements separated by semicolons.
-- `number_of_statements` (Optional) The number of SnowSQL statements. This can help reduce the risk of SQL injection attacks.
+- `number_of_statements` (Optional) The number of SnowSQL statements. This can help reduce the risk of SQL injection attacks. Defaults to `null`.
 
 ## Attribute Reference
 

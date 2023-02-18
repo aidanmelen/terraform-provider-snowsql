@@ -59,7 +59,7 @@ var lifecycleSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     nil,
 		Computed:    true,
-		Description: "Specifies the number of SnowSQL statements. If not provided, the default value is the count of semicolons in SnowSQL statements.",
+		Description: numberOfStatementsDescription,
 	},
 }
 
@@ -137,12 +137,7 @@ func resourceExec() *schema.Resource {
 func parseLifecycleSchemaData(lifecycle string, d *schema.ResourceData) (string, int) {
 	l := d.Get(lifecycle).([]interface{})
 	multiStmt := l[0].(map[string]interface{})["statements"].(string)
-	numOfStmts, ok := l[0].(map[string]interface{})["number_of_statements"].(int)
-
-	if !ok {
-		numOfStmts = strings.Count(multiStmt, ";")
-	}
-
+	numOfStmts := l[0].(map[string]interface{})["number_of_statements"].(int)
 	return multiStmt, numOfStmts
 }
 

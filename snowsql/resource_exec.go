@@ -6,12 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jmoiron/sqlx"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -164,51 +162,54 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	readStmts, ok := d.Get("read.0.statements").(string)
+	_, ok := d.Get("read.0.statements").(string)
 	if !ok {
 		d.Set("read_results", nil)
 		return nil
 	}
 
-	// Split the input string into separate queries
-	queries := strings.Split(readStmts, ";")
+	// Execute the `create` statements
+	db := m.(*sql.DB)
+	multiStmt, numOfStmts := parseLifecycleSchemaData("read", d)
+	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
+	rows, err := db.QueryContext(multiStmtCtx, multiStmt)
+	if err != nil {
+		d.Set("read", nil)
+		d.Set("read_results", nil)
+		return diag.FromErr(err)
+	}
+	defer rows.Close()
 
-	// Execute each query and append the results to the queryResult array
+	// Get the names of the columns in the result set
+	columnNames, err := rows.Columns()
+	if err != nil {
+		d.Set("read", nil)
+		d.Set("read_results", nil)
+		return diag.FromErr(err)
+	}
+
+	// Loop through the query result rows
 	var queryResult []map[string]interface{}
-	for _, query := range queries {
-		query = strings.TrimSpace(query)
-		if query == "" {
-			continue
+	for rows.Next() {
+		// Create a []interface{} slice with the same length as the number of columns
+		columnValues := make([]interface{}, len(columnNames))
+		// Create a []interface{} slice to hold the values for this row
+		rowValues := make([]interface{}, len(columnNames))
+		for i := range rowValues {
+			rowValues[i] = &columnValues[i]
 		}
-
-		// Execute the query
-		db := m.(*sql.DB)
-		sdb := sqlx.NewDb(db, "snowflake").Unsafe()
-		rows, err := sdb.Queryx(query)
-
-		if err != nil {
+		// Scan the row values into the columnValues slice
+		if err := rows.Scan(rowValues...); err != nil {
 			d.Set("read", nil)
 			d.Set("read_results", nil)
-			return diag.FromErr(fmt.Errorf("failed to execute the read statements.\n\nQuery:\n\n  %s\n\n%s", query, err))
+			return diag.FromErr(err)
 		}
-
-		// Loop through the query result rows
-		for rows.Next() {
-			row := make(map[string]interface{})
-			err := rows.MapScan(row)
-			if err != nil {
-				d.Set("read", nil)
-				d.Set("read_results", nil)
-				return diag.FromErr(fmt.Errorf("failed to scan row resulting from one of the read statements.\n\nQuery:\n\n  %s\n\tRow:\n\n  %s\n\n%s", query, row, err))
-			}
-			queryResult = append(queryResult, row)
+		// Create a map of column name to value for this row
+		row := make(map[string]interface{})
+		for i, name := range columnNames {
+			row[name] = columnValues[i]
 		}
-
-		if err := rows.Close(); err != nil {
-			d.Set("read", nil)
-			d.Set("read_results", nil)
-			return diag.FromErr(fmt.Errorf("failed to close rows after executing one of the read statements.\n\nQuery:\n\n  %s\n\n%s", query, err))
-		}
+		queryResult = append(queryResult, row)
 	}
 
 	log.Print("[DEBUG] raw query result: ", queryResult)
@@ -218,7 +219,7 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err != nil {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
-		return diag.FromErr(fmt.Errorf("failed to marshal resulting rows after executing the read statements.\n\nQueries:\n\n  %s\nResult:\n\n  %s\n\n%s", readStmts, queryResult, err))
+		return diag.FromErr(err)
 	}
 
 	log.Print("[DEBUG] marshalled query result: ", string(marshalledResult))

@@ -1,12 +1,12 @@
 ---
 page_title: "Provider: SnowSQL"
 description: |-
-  The `snowsql` provider allows for the management of the `create`, `read`, `update`, and `delete` lifecycles for [Snowflake](https://www.snowflake.com) objects using [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql.html).
+  The `snowsql` provider allows for custom Terraform CRUD management of [Snowflake](https://www.snowflake.com) objects using [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql.html).
 ---
 
 # SnowSQL Provider
 
-The `snowsql` provider allows for the management of the `create`, `read`, `update`, and `delete` lifecycles for [Snowflake](https://www.snowflake.com) objects using [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql.html).
+The `snowsql` provider allows for custom Terraform CRUD management of [Snowflake](https://www.snowflake.com) objects using [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql.html).
 
 -> **NOTE:** This provider is not a drop in replacement This provider is not a drop in replacement for the robust resources implemented by [terraform-provider-snowflake](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs). For example, use the `snowflake_warehouse` resource if you need to create a virtual warehouse, Use this provider when you require fine grain control of [DCL](https://www.geeksforgeeks.org/sql-ddl-dql-dml-dcl-tcl-commands/) commands or to implement Snowflake objects that are unsupported by the Snowflake provider resources.
 

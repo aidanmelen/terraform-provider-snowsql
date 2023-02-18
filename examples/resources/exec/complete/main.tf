@@ -54,4 +54,3 @@ resource "snowsql_exec" "role_grant_all" {
     EOT
   }
 }
-

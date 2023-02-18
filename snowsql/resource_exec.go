@@ -15,7 +15,7 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-var numberOfStatementsDescription = "A string containing one or many SnowSQL statements separated by semicolons. This can help reduce the risk of SQL injection attacks."
+var numberOfStatementsDescription = "The number of SnowSQL statements. This can help reduce the risk of SQL injection attacks. Defaults to `null`."
 
 var createLifecycleSchema = map[string]*schema.Schema{
 	"statements": {
@@ -34,7 +34,6 @@ var createLifecycleSchema = map[string]*schema.Schema{
 	"number_of_statements": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		ForceNew:    true,
 		Default:     nil,
 		Computed:    true,
 		Description: numberOfStatementsDescription,
@@ -75,14 +74,14 @@ func resourceExec() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Specifies the identifier for the SnowSQL resource.",
+				Description: "The name of the resource.",
 			},
 			"create": {
 				Type:        schema.TypeList,
 				Required:    true,
 				MaxItems:    1,
 				ForceNew:    true,
-				Description: "Specifies the SnowSQL create lifecycle.",
+				Description: "Configuration block for create lifecycle statements.",
 				Elem: &schema.Resource{
 					Schema: createLifecycleSchema,
 				},
@@ -92,7 +91,7 @@ func resourceExec() *schema.Resource {
 				Optional:    true,
 				MaxItems:    1,
 				ForceNew:    false,
-				Description: "Specifies the SnowSQL read lifecycle.",
+				Description: "Configuration block for read lifecycle statements.",
 				Elem: &schema.Resource{
 					Schema: lifecycleSchema,
 				},
@@ -102,7 +101,7 @@ func resourceExec() *schema.Resource {
 				Optional:    true,
 				MaxItems:    1,
 				ForceNew:    false,
-				Description: "Specifies the SnowSQL update lifecycle.",
+				Description: "Configuration block for update lifecycle statements.",
 				Elem: &schema.Resource{
 					Schema: lifecycleSchema,
 				},
@@ -112,7 +111,7 @@ func resourceExec() *schema.Resource {
 				Required:    true,
 				MaxItems:    1,
 				ForceNew:    false,
-				Description: "Specifies the SnowSQL delete lifecycle.",
+				Description: "Configuration block for delete lifecycle statements.",
 				Elem: &schema.Resource{
 					Schema: lifecycleSchema,
 				},
@@ -121,7 +120,7 @@ func resourceExec() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   true,
-				Description: "The List of query results from the read statements.",
+				Description: "The encoded JSON list of query results from the read statements. This value is always marked as sensitive.",
 			},
 		},
 		CustomizeDiff: customdiff.All(

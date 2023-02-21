@@ -13,7 +13,7 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-var numberOfStatementsDescription = "The number of SnowSQL statements. This can help reduce the risk of SQL injection attacks. Defaults to `null`."
+var numberOfStatementsDescription = "The number of SnowSQL statements to be executed. This can help reduce the risk of SQL injection attacks. Defaults to `null` indicating that there is no limit on the number of statements. `0` and `-1` also indicate no limit."
 
 var createLifecycleSchema = map[string]*schema.Schema{
 	"statements": {
@@ -123,7 +123,7 @@ func resourceExec() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			customdiff.ComputedIf("read_results", func(ctx context.Context, diff *schema.ResourceDiff, m interface{}) bool {
-				return diff.HasChange("read.0.statements") || diff.HasChange("read.0.number_of_statements") || diff.HasChange("update.0.statements") || diff.HasChange("update.0.number_of_statements")
+				return diff.HasChange("read.0.statements") || diff.HasChange("update.0.statements")
 			}),
 		),
 		Importer: &schema.ResourceImporter{
@@ -192,7 +192,7 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err != nil {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
-		return diag.FromErr(fmt.Errorf("failed to query the read statements.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
+		return diag.FromErr(fmt.Errorf("failed to query the read statements.\n\nStatements:\n\n  %s\n\nResults:\n\n  %v\n\n%s", readStmts, rows, err))
 	}
 	defer rows.Close()
 
@@ -227,7 +227,7 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err := processRows(rows); err != nil {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
-		return diag.FromErr(fmt.Errorf("failed to process the results from the first query.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
+		return diag.FromErr(fmt.Errorf("failed to process the results from the first query.\n\nStatements:\n\n  %s\n\nResults:\n\n  %v\n\n%s", readStmts, results, err))
 	}
 
 	log.Print("[DEBUG] finished processing the first query result: ", results)
@@ -236,7 +236,7 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		if err := processRows(rows); err != nil {
 			d.Set("read", nil)
 			d.Set("read_results", nil)
-			return diag.FromErr(fmt.Errorf("failed to process the query results.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
+			return diag.FromErr(fmt.Errorf("failed to process the query results.\n\nStatements:\n\n  %s\n\nResults:\n\n  %v\n\n%s", readStmts, results, err))
 		}
 	}
 

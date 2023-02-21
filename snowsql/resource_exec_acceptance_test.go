@@ -19,21 +19,21 @@ func TestAccLifecycles(t *testing.T) {
 				Config: applyCreate(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowsql_exec.role", "name", accName),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s", accName)),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "read.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "update.%", "0"),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s;", accName)),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "read_results", "null"),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "read_results", ""),
 				),
 			},
 			{
 				Config: applyOptionalLifecycleBlocks(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowsql_exec.role", "name", accName),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s;", accName)),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "read.0.statements", fmt.Sprintf("SHOW ROLES LIKE '%s';", accName)),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "update.0.statements", fmt.Sprintf("ALTER ROLE IF EXISTS %s SET COMMENT = 'updated with terraform';", accName)),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "read.0.statements", fmt.Sprintf("SHOW ROLES LIKE '%s'", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "update.0.statements", fmt.Sprintf("ALTER ROLE IF EXISTS %s SET COMMENT = 'updated with terraform'", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s", accName)),
 					resource.TestCheckResourceAttrSet("snowsql_exec.role", "read_results"),
 				),
 			},
@@ -41,11 +41,11 @@ func TestAccLifecycles(t *testing.T) {
 				Config: destroyOptionalLifecycleBlocks(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowsql_exec.role", "name", accName),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s", accName)),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "read.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "update.%", "0"),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s;", accName)),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "read_results", "null"),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "read_results", ""),
 				),
 			},
 		},
@@ -58,11 +58,11 @@ func applyCreate(name string) string {
 	  name = "%s"
 
 		create {
-			statements = "CREATE ROLE IF NOT EXISTS %s;"
+			statements = "CREATE ROLE IF NOT EXISTS %s"
 		}
 
 		delete {
-			statements = "DROP ROLE IF EXISTS %s;"
+			statements = "DROP ROLE IF EXISTS %s"
 		}
 	}
 	`
@@ -75,19 +75,19 @@ func applyOptionalLifecycleBlocks(name string) string {
 	  name = "%s"
 
 		create {
-			statements = "CREATE ROLE IF NOT EXISTS %s;"
+			statements = "CREATE ROLE IF NOT EXISTS %s"
 		}
 
 		read {
-			statements = "SHOW ROLES LIKE '%s';"
+			statements = "SHOW ROLES LIKE '%s'"
 		}
 
 		update {
-		  	statements = "ALTER ROLE IF EXISTS %s SET COMMENT = 'updated with terraform';"
+		  	statements = "ALTER ROLE IF EXISTS %s SET COMMENT = 'updated with terraform'"
 		}
 
 		delete {
-			statements = "DROP ROLE IF EXISTS %s;"
+			statements = "DROP ROLE IF EXISTS %s"
 		}
 	}
 	`
@@ -100,11 +100,11 @@ func destroyOptionalLifecycleBlocks(name string) string {
 	  name = "%s"
 
 		create {
-			statements = "CREATE ROLE IF NOT EXISTS %s;"
+			statements = "CREATE ROLE IF NOT EXISTS %s"
 		}
 
 		delete {
-			statements = "DROP ROLE IF EXISTS %s;"
+			statements = "DROP ROLE IF EXISTS %s"
 		}
 	}
 	`
@@ -121,10 +121,10 @@ func TestAccRead(t *testing.T) {
 				Config: readLifecycleBlockWithMultipleStatements(accName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowsql_exec.role", "name", accName),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "create.0.statements", fmt.Sprintf("CREATE ROLE IF NOT EXISTS %s", accName)),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "read.0.statements", fmt.Sprintf("SHOW ROLES LIKE '%s';\nSHOW ROLES \n\tLIKE 'SYSADMIN';\n", accName)),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "update.%", "0"),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s;", accName)),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s", accName)),
 					resource.TestCheckResourceAttrSet("snowsql_exec.role", "read_results"),
 				),
 			},
@@ -138,7 +138,7 @@ func readLifecycleBlockWithMultipleStatements(name string) string {
 	  name = "%s"
 
 		create {
-			statements = "CREATE ROLE IF NOT EXISTS %s;"
+			statements = "CREATE ROLE IF NOT EXISTS %s"
 		}
 
 		read {
@@ -150,7 +150,7 @@ func readLifecycleBlockWithMultipleStatements(name string) string {
 		}
 
 		delete {
-			statements = "DROP ROLE IF EXISTS %s;"
+			statements = "DROP ROLE IF EXISTS %s"
 		}
 	}
 	`

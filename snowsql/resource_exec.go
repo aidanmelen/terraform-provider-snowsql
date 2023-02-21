@@ -123,7 +123,7 @@ func resourceExec() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			customdiff.ComputedIf("read_results", func(ctx context.Context, diff *schema.ResourceDiff, m interface{}) bool {
-				return diff.HasChange("read.0.statements") || diff.HasChange("update.0.statements")
+				return diff.HasChange("read.0.statements") || diff.HasChange("read.0.number_of_statements") || diff.HasChange("update.0.statements") || diff.HasChange("update.0.number_of_statements")
 			}),
 		),
 		Importer: &schema.ResourceImporter{
@@ -136,6 +136,7 @@ func parseLifecycleSchemaData(lifecycle string, d *schema.ResourceData) (string,
 	l := d.Get(lifecycle).([]interface{})
 	multiStmt := l[0].(map[string]interface{})["statements"].(string)
 	numOfStmts := l[0].(map[string]interface{})["number_of_statements"].(int)
+
 	return multiStmt, numOfStmts
 }
 
@@ -162,69 +163,88 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	_, ok := d.Get("read.0.statements").(string)
+	readStmts, ok := d.Get("read.0.statements").(string)
 	if !ok {
+		d.Set("read", nil)
 		d.Set("read_results", nil)
 		return nil
 	}
 
-	// Execute the `create` statements
+	// Execute the `read` statements
 	db := m.(*sql.DB)
 	multiStmt, numOfStmts := parseLifecycleSchemaData("read", d)
-	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
-	rows, err := db.QueryContext(multiStmtCtx, multiStmt)
+	multiStmtCtx, err := gosnowflake.WithMultiStatement(ctx, numOfStmts)
 	if err != nil {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
-		return diag.FromErr(err)
+		diag.FromErr(fmt.Errorf("failed to build multiple statement query.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
+	}
+
+	rows, err := db.QueryContext(multiStmtCtx, multiStmt)
+
+	if err != nil {
+		d.Set("read", nil)
+		d.Set("read_results", nil)
+		diag.FromErr(fmt.Errorf("failed to query the read statements.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
 	}
 	defer rows.Close()
 
-	// Get the names of the columns in the result set
-	columnNames, err := rows.Columns()
-	if err != nil {
-		d.Set("read", nil)
-		d.Set("read_results", nil)
-		return diag.FromErr(err)
+	// Process all the rows from all the queries and store the results in a list
+	results := make([]map[string]interface{}, 0)
+	processRows := func(rows *sql.Rows) error {
+		for rows.Next() {
+			columns, err := rows.Columns()
+			if err != nil {
+				return err
+			}
+			values := make([]interface{}, len(columns))
+			for i := range columns {
+				values[i] = new(interface{})
+			}
+			err = rows.Scan(values...)
+			if err != nil {
+				return err
+			}
+			rowMap := make(map[string]interface{})
+			for i, col := range columns {
+				rowMap[col] = *values[i].(*interface{})
+			}
+			results = append(results, rowMap)
+		}
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		return nil
 	}
 
-	// Loop through the query result rows
-	var queryResult []map[string]interface{}
-	for rows.Next() {
-		// Create a []interface{} slice with the same length as the number of columns
-		columnValues := make([]interface{}, len(columnNames))
-		// Create a []interface{} slice to hold the values for this row
-		rowValues := make([]interface{}, len(columnNames))
-		for i := range rowValues {
-			rowValues[i] = &columnValues[i]
-		}
-		// Scan the row values into the columnValues slice
-		if err := rows.Scan(rowValues...); err != nil {
+	if err := processRows(rows); err != nil {
+		d.Set("read", nil)
+		d.Set("read_results", nil)
+		diag.FromErr(fmt.Errorf("failed to process the results from the first query.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
+	}
+
+	log.Print("[DEBUG] finished processing the first query result: ", results)
+
+	for rows.NextResultSet() {
+		if err := processRows(rows); err != nil {
 			d.Set("read", nil)
 			d.Set("read_results", nil)
-			return diag.FromErr(err)
+			diag.FromErr(fmt.Errorf("failed to process the query results.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
 		}
-		// Create a map of column name to value for this row
-		row := make(map[string]interface{})
-		for i, name := range columnNames {
-			row[name] = columnValues[i]
-		}
-		queryResult = append(queryResult, row)
 	}
 
-	log.Print("[DEBUG] raw query result: ", queryResult)
+	log.Print("[DEBUG] finished processing the all query results: ", results)
 
-	// Marshal the query read_results to JSON
-	marshalledResult, err := json.Marshal(queryResult)
+	marshalledResults, _ := json.Marshal(results)
 	if err != nil {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("failed to marshal query results to JSON.\n\nStatements:\n\n  %s\n\nResults:\n\n  %s\n\n%s", readStmts, results, err))
 	}
 
-	log.Print("[DEBUG] marshalled query result: ", string(marshalledResult))
+	log.Print("[DEBUG] marshalled query results: ", string(marshalledResults))
 
-	d.Set("read_results", string(marshalledResult))
+	d.Set("read_results", string(marshalledResults))
 
 	return diags
 }

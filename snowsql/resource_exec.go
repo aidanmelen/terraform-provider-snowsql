@@ -6,16 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jmoiron/sqlx"
 	"github.com/snowflakedb/gosnowflake"
 )
 
-var numberOfStatementsDescription = "The number of SnowSQL statements. This can help reduce the risk of SQL injection attacks. Defaults to `null`."
+var numberOfStatementsDescription = "The number of SnowSQL statements to be executed. This can help reduce the risk of SQL injection attacks. Defaults to `null` indicating that there is no limit on the number of statements (`0` and `-1` also indicate no limit)."
 
 var createLifecycleSchema = map[string]*schema.Schema{
 	"statements": {
@@ -59,7 +57,7 @@ var lifecycleSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     nil,
 		Computed:    true,
-		Description: "Specifies the number of SnowSQL statements. If not provided, the default value is the count of semicolons in SnowSQL statements.",
+		Description: numberOfStatementsDescription,
 	},
 }
 
@@ -134,27 +132,15 @@ func resourceExec() *schema.Resource {
 	}
 }
 
-func parseLifecycleSchemaData(lifecycle string, d *schema.ResourceData) (string, int) {
-	l := d.Get(lifecycle).([]interface{})
-	multiStmt := l[0].(map[string]interface{})["statements"].(string)
-	numOfStmts, ok := l[0].(map[string]interface{})["number_of_statements"].(int)
-
-	if !ok {
-		numOfStmts = strings.Count(multiStmt, ";")
-	}
-
-	return multiStmt, numOfStmts
-}
-
 func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	createStmts := d.Get("create.0.statements")
+	createStmts := d.Get("create.0.statements").(string)
+	numOfStmts := d.Get("create.0.number_of_statements").(int)
 
 	// Execute the `create` statements
 	db := m.(*sql.DB)
-	multiStmt, numOfStmts := parseLifecycleSchemaData("create", d)
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
-	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+	_, err := db.ExecContext(multiStmtCtx, createStmts)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("failed to execute the create statements.\n\nStatements:\n\n  %s\n\n%s", createStmts, err))
@@ -167,76 +153,103 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
 	var diags diag.Diagnostics
 
 	readStmts, ok := d.Get("read.0.statements").(string)
-	if !ok {
+	numOfStmts := d.Get("read.0.number_of_statements").(int)
+
+	if !ok || readStmts == "" {
+		d.Set("read", nil)
 		d.Set("read_results", nil)
 		return nil
 	}
 
-	// Split the input string into separate queries
-	queries := strings.Split(readStmts, ";")
+	// Query the `read` statements
 
-	// Execute each query and append the results to the queryResult array
-	var queryResult []map[string]interface{}
-	for _, query := range queries {
-		query = strings.TrimSpace(query)
-		if query == "" {
-			continue
-		}
-
-		// Execute the query
-		db := m.(*sql.DB)
-		sdb := sqlx.NewDb(db, "snowflake").Unsafe()
-		rows, err := sdb.Queryx(query)
-
-		if err != nil {
-			d.Set("read", nil)
-			d.Set("read_results", nil)
-			return diag.FromErr(fmt.Errorf("failed to execute the read statements.\n\nQuery:\n\n  %s\n\n%s", query, err))
-		}
-
-		// Loop through the query result rows
-		for rows.Next() {
-			row := make(map[string]interface{})
-			err := rows.MapScan(row)
-			if err != nil {
-				d.Set("read", nil)
-				d.Set("read_results", nil)
-				return diag.FromErr(fmt.Errorf("failed to scan row resulting from one of the read statements.\n\nQuery:\n\n  %s\n\tRow:\n\n  %s\n\n%s", query, row, err))
-			}
-			queryResult = append(queryResult, row)
-		}
-
-		if err := rows.Close(); err != nil {
-			d.Set("read", nil)
-			d.Set("read_results", nil)
-			return diag.FromErr(fmt.Errorf("failed to close rows after executing one of the read statements.\n\nQuery:\n\n  %s\n\n%s", query, err))
-		}
-	}
-
-	log.Print("[DEBUG] raw query result: ", queryResult)
-
-	// Marshal the query read_results to JSON
-	marshalledResult, err := json.Marshal(queryResult)
+	db := m.(*sql.DB)
+	multiStmtCtx, err := gosnowflake.WithMultiStatement(ctx, numOfStmts)
 	if err != nil {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
-		return diag.FromErr(fmt.Errorf("failed to marshal resulting rows after executing the read statements.\n\nQueries:\n\n  %s\nResult:\n\n  %s\n\n%s", readStmts, queryResult, err))
+		return diag.FromErr(fmt.Errorf("failed to build multiple statement query.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
 	}
 
-	log.Print("[DEBUG] marshalled query result: ", string(marshalledResult))
+	rows, err := db.QueryContext(multiStmtCtx, readStmts)
 
-	d.Set("read_results", string(marshalledResult))
+	if err != nil {
+		d.Set("read", nil)
+		d.Set("read_results", nil)
+		return diag.FromErr(fmt.Errorf("failed to query the read statements.\n\nStatements:\n\n  %s\n\nResults:\n\n  %v\n\n%s", readStmts, rows, err))
+	}
+	defer rows.Close()
+
+	// Process all the rows from all the queries and store the results in a list
+	results := make([]map[string]interface{}, 0)
+	processRows := func(rows *sql.Rows) error {
+		for rows.Next() {
+			columns, err := rows.Columns()
+			if err != nil {
+				return err
+			}
+			values := make([]interface{}, len(columns))
+			for i := range columns {
+				values[i] = new(interface{})
+			}
+			err = rows.Scan(values...)
+			if err != nil {
+				return err
+			}
+			rowMap := make(map[string]interface{})
+			for i, col := range columns {
+				rowMap[col] = *values[i].(*interface{})
+			}
+			results = append(results, rowMap)
+		}
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if err := processRows(rows); err != nil {
+		d.Set("read", nil)
+		d.Set("read_results", nil)
+		return diag.FromErr(fmt.Errorf("failed to process the results from the first query.\n\nStatements:\n\n  %s\n\nResults:\n\n  %v\n\n%s", readStmts, results, err))
+	}
+
+	log.Print("[DEBUG] finished processing the first query result: ", results)
+
+	for rows.NextResultSet() {
+		if err := processRows(rows); err != nil {
+			d.Set("read", nil)
+			d.Set("read_results", nil)
+			return diag.FromErr(fmt.Errorf("failed to process the query results.\n\nStatements:\n\n  %s\n\nResults:\n\n  %v\n\n%s", readStmts, results, err))
+		}
+	}
+
+	log.Print("[DEBUG] finished processing the all query results: ", results)
+
+	marshalledResults, _ := json.Marshal(results)
+	if err != nil {
+		d.Set("read", nil)
+		d.Set("read_results", nil)
+		return diag.FromErr(fmt.Errorf("failed to marshal query results to JSON.\n\nStatements:\n\n  %s\n\nResults:\n\n  %s\n\n%s", readStmts, results, err))
+	}
+
+	log.Print("[DEBUG] marshalled query results: ", string(marshalledResults))
+
+	d.Set("read_results", string(marshalledResults))
 
 	return diags
 }
 
 func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	updateStmts, ok := d.GetOk("update.0.statements")
-	if !ok {
+	updateStmts, ok := d.Get("update.0.statements").(string)
+	numOfStmts := d.Get("update.0.number_of_statements").(int)
+
+	if !ok || updateStmts == "" {
 		d.Set("update", nil)
 		return resourceExecRead(ctx, d, m)
 	}
@@ -247,9 +260,8 @@ func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 	// Execute the 'update' statements
 	db := m.(*sql.DB)
-	multiStmt, numOfStmts := parseLifecycleSchemaData("update", d)
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
-	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+	_, err := db.ExecContext(multiStmtCtx, updateStmts)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("failed to execute the update statements.\n\nStatements:\n\n  %s\n\n%s", updateStmts, err))
@@ -259,15 +271,16 @@ func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceExecDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
 	var diags diag.Diagnostics
 
-	deleteStmts := d.Get("delete.0.statements")
+	deleteStmts := d.Get("delete.0.statements").(string)
+	numOfStmts := d.Get("delete.0.number_of_statements").(int)
 
 	// Execute the 'delete' statements
 	db := m.(*sql.DB)
-	multiStmt, numOfStmts := parseLifecycleSchemaData("delete", d)
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
-	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+	_, err := db.ExecContext(multiStmtCtx, deleteStmts)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("failed to execute the delete statements.\n\nStatements:\n\n  %s\n\n%s", deleteStmts, err))

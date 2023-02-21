@@ -1,6 +1,9 @@
 package snowsql
 
 import (
+	"database/sql"
+	"fmt"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -154,6 +157,63 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"snowsql_exec": resourceExec(),
 		},
-		ConfigureFunc: provider.ConfigureProvider,
+		ConfigureFunc: ConfigureProvider,
 	}
+}
+
+func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
+	account := s.Get("account").(string)
+	user := s.Get("username").(string)
+	password := s.Get("password").(string)
+	browserAuth := s.Get("browser_auth").(bool)
+	privateKeyPath := s.Get("private_key_path").(string)
+	privateKey := s.Get("private_key").(string)
+	privateKeyPassphrase := s.Get("private_key_passphrase").(string)
+	oauthAccessToken := s.Get("oauth_access_token").(string)
+	region := s.Get("region").(string)
+	role := s.Get("role").(string)
+	oauthRefreshToken := s.Get("oauth_refresh_token").(string)
+	oauthClientID := s.Get("oauth_client_id").(string)
+	oauthClientSecret := s.Get("oauth_client_secret").(string)
+	oauthEndpoint := s.Get("oauth_endpoint").(string)
+	oauthRedirectURL := s.Get("oauth_redirect_url").(string)
+	host := s.Get("host").(string)
+	protocol := s.Get("protocol").(string)
+	port := s.Get("port").(int)
+	warehouse := s.Get("warehouse").(string)
+
+	if oauthRefreshToken != "" {
+		accessToken, err := provider.GetOauthAccessToken(oauthEndpoint, oauthClientID, oauthClientSecret, provider.GetOauthData(oauthRefreshToken, oauthRedirectURL))
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve access token from refresh token")
+		}
+		oauthAccessToken = accessToken
+	}
+
+	dsn, err := provider.DSN(
+		account,
+		user,
+		password,
+		browserAuth,
+		privateKeyPath,
+		privateKey,
+		privateKeyPassphrase,
+		oauthAccessToken,
+		region,
+		role,
+		host,
+		protocol,
+		port,
+		warehouse,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("could not build dsn for snowflake connection err = %w", err)
+	}
+
+	db, err := sql.Open("snowflake", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("Could not open snowflake database err = %w", err)
+	}
+
+	return db, nil
 }

@@ -132,23 +132,15 @@ func resourceExec() *schema.Resource {
 	}
 }
 
-func parseLifecycleSchemaData(lifecycle string, d *schema.ResourceData) (string, int) {
-	l := d.Get(lifecycle).([]interface{})
-	multiStmt := l[0].(map[string]interface{})["statements"].(string)
-	numOfStmts := l[0].(map[string]interface{})["number_of_statements"].(int)
-
-	return multiStmt, numOfStmts
-}
-
 func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	createStmts := d.Get("create.0.statements")
+	createStmts := d.Get("create.0.statements").(string)
+	numOfStmts := d.Get("create.0.number_of_statements").(int)
 
 	// Execute the `create` statements
 	db := m.(*sql.DB)
-	multiStmt, numOfStmts := parseLifecycleSchemaData("create", d)
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
-	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+	_, err := db.ExecContext(multiStmtCtx, createStmts)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("failed to execute the create statements.\n\nStatements:\n\n  %s\n\n%s", createStmts, err))
@@ -161,17 +153,13 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
 	var diags diag.Diagnostics
 
 	readStmts, ok := d.Get("read.0.statements").(string)
-	if !ok || readStmts == "" {
-		d.Set("read", nil)
-		d.Set("read_results", nil)
-		return nil
-	}
+	numOfStmts := d.Get("read.0.number_of_statements").(int)
 
-	numOfStmts, ok := d.Get("read.0.number_of_statements").(int)
-	if !ok {
+	if !ok || readStmts == "" {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
 		return nil
@@ -258,8 +246,10 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	updateStmts, ok := d.GetOk("update.0.statements")
-	if !ok {
+	updateStmts, ok := d.Get("update.0.statements").(string)
+	numOfStmts := d.Get("update.0.number_of_statements").(int)
+
+	if !ok || updateStmts == "" {
 		d.Set("update", nil)
 		return resourceExecRead(ctx, d, m)
 	}
@@ -270,9 +260,8 @@ func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 	// Execute the 'update' statements
 	db := m.(*sql.DB)
-	multiStmt, numOfStmts := parseLifecycleSchemaData("update", d)
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
-	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+	_, err := db.ExecContext(multiStmtCtx, updateStmts)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("failed to execute the update statements.\n\nStatements:\n\n  %s\n\n%s", updateStmts, err))
@@ -282,15 +271,16 @@ func resourceExecUpdate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceExecDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
 	var diags diag.Diagnostics
 
-	deleteStmts := d.Get("delete.0.statements")
+	deleteStmts := d.Get("delete.0.statements").(string)
+	numOfStmts := d.Get("delete.0.number_of_statements").(int)
 
 	// Execute the 'delete' statements
 	db := m.(*sql.DB)
-	multiStmt, numOfStmts := parseLifecycleSchemaData("delete", d)
 	multiStmtCtx, _ := gosnowflake.WithMultiStatement(ctx, numOfStmts)
-	_, err := db.ExecContext(multiStmtCtx, multiStmt)
+	_, err := db.ExecContext(multiStmtCtx, deleteStmts)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("failed to execute the delete statements.\n\nStatements:\n\n  %s\n\n%s", deleteStmts, err))

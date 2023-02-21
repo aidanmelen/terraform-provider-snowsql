@@ -6,7 +6,7 @@ resource "snowsql_exec" "role" {
   }
 
   read {
-    statements = "SHOW ROLES LIKE 'my_role';"
+    statements = "SHOW ROLES LIKE 'my_role'"
   }
 
   delete {

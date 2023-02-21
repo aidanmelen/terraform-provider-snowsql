@@ -13,7 +13,7 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-var numberOfStatementsDescription = "The number of SnowSQL statements to be executed. This can help reduce the risk of SQL injection attacks. Defaults to `null` indicating that there is no limit on the number of statements. `0` and `-1` also indicate no limit."
+var numberOfStatementsDescription = "The number of SnowSQL statements to be executed. This can help reduce the risk of SQL injection attacks. Defaults to `null` indicating that there is no limit on the number of statements (`0` and `-1` also indicate no limit)."
 
 var createLifecycleSchema = map[string]*schema.Schema{
 	"statements": {

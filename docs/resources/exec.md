@@ -94,7 +94,7 @@ resource "snowsql_exec" "role" {
   }
 
   read {
-    statements = "SHOW ROLES LIKE 'my_role';"
+    statements = "SHOW ROLES LIKE 'my_role'"
   }
 
   delete {
@@ -250,7 +250,7 @@ resource "snowsql_exec" "function" {
 The nested blocks all have the same arguments.
 
 - `statements` (Required) A string containing one or many SnowSQL statements separated by semicolons.
-- `number_of_statements` (Optional) The number of SnowSQL statements to be executed. This can help reduce the risk of SQL injection attacks. Defaults to `null` indicating that there is no limit on the number of statements. `0` and `-1` also indicate no limit.
+- `number_of_statements` (Optional) The number of SnowSQL statements to be executed. This can help reduce the risk of SQL injection attacks. Defaults to `null` indicating that there is no limit on the number of statements (`0` and `-1` also indicate no limit).
 
 ## Attribute Reference
 

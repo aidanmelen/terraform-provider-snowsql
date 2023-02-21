@@ -164,28 +164,35 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	var diags diag.Diagnostics
 
 	readStmts, ok := d.Get("read.0.statements").(string)
+	if !ok || readStmts == "" {
+		d.Set("read", nil)
+		d.Set("read_results", nil)
+		return nil
+	}
+
+	numOfStmts, ok := d.Get("read.0.number_of_statements").(int)
 	if !ok {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
 		return nil
 	}
 
-	// Execute the `read` statements
+	// Query the `read` statements
+
 	db := m.(*sql.DB)
-	multiStmt, numOfStmts := parseLifecycleSchemaData("read", d)
 	multiStmtCtx, err := gosnowflake.WithMultiStatement(ctx, numOfStmts)
 	if err != nil {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
-		diag.FromErr(fmt.Errorf("failed to build multiple statement query.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
+		return diag.FromErr(fmt.Errorf("failed to build multiple statement query.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
 	}
 
-	rows, err := db.QueryContext(multiStmtCtx, multiStmt)
+	rows, err := db.QueryContext(multiStmtCtx, readStmts)
 
 	if err != nil {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
-		diag.FromErr(fmt.Errorf("failed to query the read statements.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
+		return diag.FromErr(fmt.Errorf("failed to query the read statements.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
 	}
 	defer rows.Close()
 
@@ -220,7 +227,7 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	if err := processRows(rows); err != nil {
 		d.Set("read", nil)
 		d.Set("read_results", nil)
-		diag.FromErr(fmt.Errorf("failed to process the results from the first query.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
+		return diag.FromErr(fmt.Errorf("failed to process the results from the first query.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
 	}
 
 	log.Print("[DEBUG] finished processing the first query result: ", results)
@@ -229,7 +236,7 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		if err := processRows(rows); err != nil {
 			d.Set("read", nil)
 			d.Set("read_results", nil)
-			diag.FromErr(fmt.Errorf("failed to process the query results.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
+			return diag.FromErr(fmt.Errorf("failed to process the query results.\n\nStatements:\n\n  %s\n\n%s", readStmts, err))
 		}
 	}
 

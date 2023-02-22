@@ -8,13 +8,13 @@ output "show_database_like_sample" {
   value       = jsondecode(nonsensitive(data.snowsql_query.show_database_like_sample.results))
 }
 
-# output "count_snowflake_sample_data_tables" {
-#   description = "Count some tables from snowflake_sample_data"
-#   value       = [for res in jsondecode(nonsensitive(data.snowsql_query.count_snowflake_sample_data_tables.results)) : tonumber(res["COUNT(*)"])]
-# }
+output "count_snowflake_sample_data_tables" {
+  description = "Count some tables from snowflake_sample_data"
+  value       = [for res in jsondecode(nonsensitive(data.snowsql_query.count_snowflake_sample_data_tables.results)) : tonumber(res["COUNT(*)"])]
+}
 
-# output "select_snowflake_sample_data_tpch_sf1_lineitem" {
-#   description = "select complex query from snowflake_sample_data.tpch_sf1.lineitem."
-#   value       = jsondecode(nonsensitive(data.snowsql_query.select_snowflake_sample_data_tpch_sf1_lineitem.results))
-# }
+output "select_snowflake_sample_data_tpch_sf1_lineitem" {
+  description = "select complex query from snowflake_sample_data.tpch_sf1.lineitem."
+  value       = jsondecode(nonsensitive(data.snowsql_query.select_snowflake_sample_data_tpch_sf1_lineitem.results))
+}
 

@@ -97,6 +97,10 @@ resource "snowsql_exec" "role" {
     statements = "SHOW ROLES LIKE 'my_role'"
   }
 
+  update {
+    statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform'"
+  }
+
   delete {
     statements = "DROP ROLE IF EXISTS my_role"
   }
@@ -113,6 +117,10 @@ resource "snowsql_exec" "role" {
     statements = "CREATE ROLE IF NOT EXISTS ${local.name}"
   }
 
+  read {
+    statements = "SHOW ROLES LIKE 'my_role'"
+  }
+
   update {
     statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform'"
   }
@@ -122,6 +130,8 @@ resource "snowsql_exec" "role" {
   }
 }
 ```
+
+-> **NOTE:** The read statements will be queried not only during the initial Terraform apply and the Terraform refresh phase, but also any time the update statements are created or modified. This is beneficial because it allows you to retrieve the updated state of the Snowflake object and use the results in your infrastructure management. By doing so, you can ensure that your infrastructure remains in sync with the actual state of the Snowflake object. 
 
 ### Multi-Statements
 

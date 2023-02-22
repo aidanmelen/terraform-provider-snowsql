@@ -9,12 +9,27 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/rs/xid"
 )
 
 func dataSourceQuery() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceQueryRead,
 		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     nil,
+				Description: "The name of the data resource. Defaults to random ID.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v == "" {
+						errs = append(errs, fmt.Errorf("%q cannot be an empty string", key))
+					}
+					return
+				},
+			},
 			"statements": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -48,7 +63,7 @@ func dataSourceQuery() *schema.Resource {
 func dataSourceQueryRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	name := d.Get("statements").(string)
+	name, nameOk := d.GetOk("name")
 	stmts := d.Get("statements").(string)
 	numOfStmts := d.Get("number_of_statements").(int)
 
@@ -68,7 +83,13 @@ func dataSourceQueryRead(ctx context.Context, d *schema.ResourceData, m interfac
 	log.Print("[DEBUG] marshalled query results: ", string(marshalledResults))
 
 	d.Set("results", string(marshalledResults))
-	d.SetId(name)
+
+	if nameOk {
+		d.SetId(name.(string))
+	} else {
+		id := xid.New().String()
+		d.SetId(id)
+	}
 
 	return diags
 }

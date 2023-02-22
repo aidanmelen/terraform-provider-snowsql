@@ -5,8 +5,6 @@ go 1.19
 require (
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.54.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
-	github.com/jmoiron/sqlx v1.3.5
-	github.com/pkg/errors v0.9.1
 	github.com/snowflakedb/gosnowflake v1.6.16
 )
 
@@ -64,6 +62,7 @@ require (
 	github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 // indirect
 	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
 	github.com/luna-duclos/instrumentedsql v1.1.3 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect

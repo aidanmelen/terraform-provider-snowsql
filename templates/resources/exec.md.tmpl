@@ -13,7 +13,9 @@ The `snowsql_exec` resource allows for custom Terraform CRUD management of [Snow
 
 This basic example shows how to manage an arbitrary Snowflake object.
 
-{{ tffile "examples/resources/exec/basic/main.tf.create-delete.example" }}
+{{ tffile "examples/resources/exec/basic/.create-delete.tf.docs" }}
+
+To improve your production use of Snowflake, consider utilizing the [snowflake_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role) resource in Terraform, which enables you to define and manage Snowflake roles. The role was selected for its easy-to-understand object lifecycles and no-credit-cost creation.
 
 -> **NOTE:** It is highly recommended to test all SnowSQL statements, especially create and delete statements, in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
 
@@ -23,7 +25,7 @@ This basic example shows how to manage an arbitrary Snowflake object.
 
 This resource allows you to execute arbitrary SnowSQL queries and use the results in your infrastructure management.
 
-{{ tffile "examples/resources/exec/basic/main.tf.read.example" }}
+{{ tffile "examples/resources/exec/basic/.read.tf.docs" }}
 
 This will output the JSON formatted results like this:
 
@@ -54,9 +56,9 @@ Execute the update statements as an in-place Terraform change by adding or modif
 
 {{ tffile "examples/resources/exec/basic/main.tf" }}
 
-2. Add the update statements to alter the role in-place.
+2. Add the update statements to alter the role in-place:
 
-{{ tffile "examples/resources/exec/basic/main.tf.update.example" }}
+{{ tffile "examples/resources/exec/basic/.update.tf.docs" }}
 
 -> **NOTE:** The read statements will be queried not only during the initial Terraform apply and the Terraform refresh phase, but also any time the update statements are created or modified. This is beneficial because it allows you to retrieve the updated state of the Snowflake object and use the results in your infrastructure management. By doing so, you can ensure that your infrastructure remains in sync with the actual state of the Snowflake object. 
 

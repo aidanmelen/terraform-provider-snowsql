@@ -63,7 +63,6 @@ func dataSourceQuery() *schema.Resource {
 func dataSourceQueryRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	name, nameOk := d.GetOk("name")
 	stmts := d.Get("statements").(string)
 	numOfStmts := d.Get("number_of_statements").(int)
 
@@ -84,7 +83,8 @@ func dataSourceQueryRead(ctx context.Context, d *schema.ResourceData, m interfac
 
 	d.Set("results", string(marshalledResults))
 
-	if nameOk {
+	name, ok := d.GetOk("name")
+	if ok {
 		d.SetId(name.(string))
 	} else {
 		id := xid.New().String()

@@ -21,16 +21,16 @@ data "snowsql_query" "show_database_like_sample" {
   statements = "SHOW DATABASES LIKE '%sample%'"
 }
 
-# multiple query statements
+# multi-statement queries
 data "snowsql_query" "count_snowflake_sample_data_tables" {
   statements = <<-EOT
-    select count(*) from snowflake_sample_data.tpch_sf1.customer;
-    select count(*) from snowflake_sample_data.tpch_sf1.lineitem;
-    select count(*) from snowflake_sample_data.tpch_sf1.nation;
+    select 'customer' AS table_name, count(*) as count from snowflake_sample_data.tpch_sf1.customer;
+    select 'lineitem' AS table_name, count(*) as count from snowflake_sample_data.tpch_sf1.lineitem;
+    select 'nation' AS table_name, count(*) as count from snowflake_sample_data.tpch_sf1.nation;
   EOT
 }
 
-# complex query statement
+# multi-line statement query
 data  "snowsql_query" "select_snowflake_sample_data_tpch_sf1_lineitem" {
   statements = <<-EOT
     // https://docs.snowflake.com/en/user-guide/sample-data-tpch#functional-query-definition
@@ -63,9 +63,9 @@ data  "snowsql_query" "select_snowflake_sample_data_tpch_sf1_lineitem" {
 }
 ```
 
--> **NOTE:** It is highly recommended to test all SnowSQL statements, especially create and delete statements, in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
+-> **NOTE:** It is highly recommended to test all SnowSQL query statements in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
 
--> **NOTE:** The query statements work the same as the snowsql_exec read statements.
+-> **NOTE:** The query statements are executed and the resulting row(s) are processed in the same way as the [`snowsql_exec` read](https://registry.terraform.io/providers/aidanmelen/snowsql/latest/docs/resources/exec#query-snowflake-with-read-statements) statements.
 
 ## Argument Reference
 

@@ -10,7 +10,7 @@ output "show_database_like_sample" {
 
 output "count_snowflake_sample_data_tables" {
   description = "Count some tables from snowflake_sample_data"
-  value       = [for res in jsondecode(nonsensitive(data.snowsql_query.count_snowflake_sample_data_tables.results)) : tonumber(res["COUNT(*)"])]
+  value       = jsondecode(nonsensitive(data.snowsql_query.count_snowflake_sample_data_tables.results))
 }
 
 output "select_snowflake_sample_data_tpch_sf1_lineitem" {

@@ -3,8 +3,10 @@ resource "snowsql_exec" "function" {
 
   create {
     statements = <<-EOT
-      CREATE OR REPLACE FUNCTION ${snowflake_database.database.name}.PUBLIC.JS_FACTORIAL(f FLOAT)
-        RETURNS FLOAT
+      USE SCHEMA ${snowflake_database.database.name}.PUBLIC;
+
+      CREATE OR REPLACE FUNCTION js_factorial(d double)
+        RETURNS double
         LANGUAGE JAVASCRIPT
         STRICT
         AS '
@@ -23,7 +25,7 @@ resource "snowsql_exec" "function" {
 
   read {
     statements = <<-EOT
-      SHOW USER FUNCTIONS LIKE 'JS_FACTORIAL' 
+      SHOW USER FUNCTIONS LIKE 'js_factorial' 
         IN DATABASE ${snowflake_database.database.name};
     EOT
   }
@@ -31,7 +33,7 @@ resource "snowsql_exec" "function" {
   delete {
     statements = <<-EOT
       DROP FUNCTION IF EXISTS 
-        ${snowflake_database.database.name}.PUBLIC.JS_FACTORIAL(FLOAT);
+        ${snowflake_database.database.name}.PUBLIC.js_factorial(FLOAT);
     EOT
   }
 }

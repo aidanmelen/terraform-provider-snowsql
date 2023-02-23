@@ -1,0 +1,31 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: "The `snowsql_query` data resource."
+---
+
+# {{.Name}} ({{.Type}})
+
+The `snowsql_query` data resource allow you to retrieve information from [Snowflake](https://www.snowflake.com) objects using [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql.html).
+
+## Examples
+
+This example shows how to query arbitrary Snowflake objects.
+
+{{ tffile "examples/data-sources/query/main.tf" }}
+
+-> **NOTE:** It is highly recommended to test all SnowSQL query statements in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
+
+-> **NOTE:** The query statements are executed and the resulting row(s) are processed in the same way as the [`snowsql_exec` read](https://registry.terraform.io/providers/aidanmelen/snowsql/latest/docs/resources/exec#query-snowflake-with-read-statements) statements.
+
+## Argument Reference
+
+* `name` - (Required) The name of the resource.
+- `statements` (Required) A string containing one or many SnowSQL statements separated by semicolons.
+- `number_of_statements` (Optional) The number of SnowSQL statements to be executed. This can help reduce the risk of SQL injection attacks. Defaults to `null` indicating that there is no limit on the number of statements (`0` and `-1` also indicate no limit).
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+- `results` (String) The encoded JSON list of query results from the query statements. This value is always marked as sensitive.

@@ -27,6 +27,8 @@ resource "snowsql_exec" "role" {
 }
 ```
 
+To improve your production use of Snowflake, consider utilizing the [snowflake_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role) resource in Terraform, which enables you to define and manage Snowflake roles. The role was selected for its easy-to-understand object lifecycles and no-credit-cost creation.
+
 -> **NOTE:** It is highly recommended to test all SnowSQL statements, especially create and delete statements, in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
 
 ~> **NOTE:** It is important to ensure that any delete statements negate any corresponding create statements, to avoid any orphaned Snowflake objects. Failure to do so can result in clutter and potential issues within your Snowflake environment.
@@ -97,13 +99,18 @@ resource "snowsql_exec" "role" {
     statements = "SHOW ROLES LIKE 'my_role'"
   }
 
+  # uncomment to update role in-place
+  # update {
+  #   statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform'"
+  # }
+
   delete {
     statements = "DROP ROLE IF EXISTS my_role"
   }
 }
 ```
 
-2. Add the update statements to alter the role in-place.
+2. Add the update statements to alter the role in-place:
 
 ```terraform
 resource "snowsql_exec" "role" {
@@ -111,6 +118,10 @@ resource "snowsql_exec" "role" {
 
   create {
     statements = "CREATE ROLE IF NOT EXISTS ${local.name}"
+  }
+
+  read {
+    statements = "SHOW ROLES LIKE 'my_role'"
   }
 
   update {
@@ -122,6 +133,8 @@ resource "snowsql_exec" "role" {
   }
 }
 ```
+
+-> **NOTE:** The read statements will be queried not only during the initial Terraform apply and the Terraform refresh phase, but also any time the update statements are created or modified. This is beneficial because it allows you to retrieve the updated state of the Snowflake object and use the results in your infrastructure management. By doing so, you can ensure that your infrastructure remains in sync with the actual state of the Snowflake object. 
 
 ### Multi-Statements
 
@@ -203,8 +216,10 @@ resource "snowsql_exec" "function" {
 
   create {
     statements = <<-EOT
-      CREATE OR REPLACE FUNCTION ${snowflake_database.database.name}.PUBLIC.JS_FACTORIAL(f FLOAT)
-        RETURNS FLOAT
+      USE SCHEMA ${snowflake_database.database.name}.PUBLIC;
+
+      CREATE OR REPLACE FUNCTION js_factorial(d double)
+        RETURNS double
         LANGUAGE JAVASCRIPT
         STRICT
         AS '
@@ -223,7 +238,7 @@ resource "snowsql_exec" "function" {
 
   read {
     statements = <<-EOT
-      SHOW USER FUNCTIONS LIKE 'JS_FACTORIAL' 
+      SHOW USER FUNCTIONS LIKE 'js_factorial' 
         IN DATABASE ${snowflake_database.database.name};
     EOT
   }
@@ -231,7 +246,7 @@ resource "snowsql_exec" "function" {
   delete {
     statements = <<-EOT
       DROP FUNCTION IF EXISTS 
-        ${snowflake_database.database.name}.PUBLIC.JS_FACTORIAL(FLOAT);
+        ${snowflake_database.database.name}.PUBLIC.js_factorial(FLOAT);
     EOT
   }
 }

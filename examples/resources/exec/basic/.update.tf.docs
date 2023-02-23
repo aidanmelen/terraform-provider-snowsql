@@ -5,6 +5,10 @@ resource "snowsql_exec" "role" {
     statements = "CREATE ROLE IF NOT EXISTS ${local.name}"
   }
 
+  read {
+    statements = "SHOW ROLES LIKE 'my_role'"
+  }
+
   update {
     statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform'"
   }

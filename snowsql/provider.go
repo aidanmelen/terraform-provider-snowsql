@@ -157,6 +157,9 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"snowsql_exec": resourceExec(),
 		},
+		DataSourcesMap: map[string]*schema.Resource{
+			"snowsql_query": dataSourceQuery(),
+		},
 		ConfigureFunc: ConfigureProvider,
 	}
 }

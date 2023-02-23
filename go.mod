@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.54.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
+	github.com/rs/xid v1.4.0
 	github.com/snowflakedb/gosnowflake v1.6.16
 )
 
@@ -78,7 +79,6 @@ require (
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.16 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
-	github.com/rs/xid v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v4 v4.3.12 // indirect

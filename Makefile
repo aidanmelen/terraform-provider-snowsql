@@ -45,7 +45,7 @@ test: ## run the provider unittests
 
 .PHONY: testacc
 testacc: ## run the provider acceptance tests
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 30m
 
 .PHONY: tools
 tools: ## Get the development tools

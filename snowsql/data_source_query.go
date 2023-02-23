@@ -19,7 +19,7 @@ func dataSourceQuery() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Default:     nil,
 				Description: "The name of the data resource. Defaults to random ID.",
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {

@@ -13,13 +13,13 @@ func TestAccDataSourceQuery_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceQueryConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowsql_query.example", "result"),
+					resource.TestCheckResourceAttrSet("data.snowsql_query.example", "results"),
 				),
 			},
 			{
 				Config: testAccDataSourceQueryConfigWithOptionals(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowsql_query.example", "result"),
+					resource.TestCheckResourceAttrSet("data.snowsql_query.example", "results"),
 				),
 			},
 		},
@@ -29,7 +29,7 @@ func TestAccDataSourceQuery_basic(t *testing.T) {
 func testAccDataSourceQueryConfig() string {
 	return `
 		data "snowsql_query" "example" {
-			statements = "SELECT current_user()"
+			statements = "SHOW ROLES LIKE 'ACCOUNTADMIN'"
 		}
 	`
 }
@@ -37,8 +37,8 @@ func testAccDataSourceQueryConfig() string {
 func testAccDataSourceQueryConfigWithOptionals() string {
 	return `
 		data "snowsql_query" "example" {
-			name       			 = "example"
-			statements 		     = "SELECT current_user()"
+			name                 = "example"
+			statements           = "SHOW ROLES LIKE 'ACCOUNTADMIN'"
 			number_of_statements = 1
 		}
 	`

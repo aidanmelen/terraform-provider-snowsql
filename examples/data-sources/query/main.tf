@@ -1,5 +1,5 @@
-data "snowsql_query" "show_roles_like_accountadmin" {
-  statements = "SHOW ROLES LIKE 'ACCOUNTADMIN'"
+data "snowsql_query" "select_current_user" {
+  statements = "SELECT current_user()"
 }
 
 data "snowsql_query" "show_database_like_sample" {

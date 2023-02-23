@@ -13,8 +13,8 @@ The `snowsql_query` data resource allow you to retrieve information from [Snowfl
 This example shows how to query arbitrary Snowflake objects.
 
 ```terraform
-data "snowsql_query" "show_roles_like_accountadmin" {
-  statements = "SHOW ROLES LIKE 'ACCOUNTADMIN'"
+data "snowsql_query" "select_current_user" {
+  statements = "SELECT current_user()"
 }
 
 data "snowsql_query" "show_database_like_sample" {

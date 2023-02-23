@@ -1,6 +1,6 @@
-output "show_roles_like_accountadmin" {
-  description = "Show the ACCOUNTADMIN role."
-  value       = jsondecode(nonsensitive(data.snowsql_query.show_roles_like_accountadmin.results))
+output "select_current_user" {
+  description = "Select the current user."
+  value       = jsondecode(nonsensitive(data.snowsql_query.select_current_user.results))[0]["CURRENT_USER()"]
 }
 
 output "show_database_like_sample" {

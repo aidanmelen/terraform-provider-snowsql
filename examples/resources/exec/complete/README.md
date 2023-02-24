@@ -30,7 +30,7 @@ Note that this example may create resources which can cost money (Warehouse, Dat
 |------|---------|
 | <a name="provider_random"></a> [random](#provider\_random) | 3.4.3 |
 | <a name="provider_snowflake"></a> [snowflake](#provider\_snowflake) | 0.56.3 |
-| <a name="provider_snowsql"></a> [snowsql](#provider\_snowsql) | 1.2.0 |
+| <a name="provider_snowsql"></a> [snowsql](#provider\_snowsql) | 1.3.1 |
 
 ## Modules
 

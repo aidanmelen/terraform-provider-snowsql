@@ -141,6 +141,8 @@ func resourceExec() *schema.Resource {
 }
 
 func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	stmts := d.Get("create.0.statements").(string)
 	numOfStmts := d.Get("create.0.number_of_statements").(int)
 
@@ -148,6 +150,15 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 	err := snowflakeExecWithMultiStatement(ctx, db, "create", stmts, numOfStmts)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	updateStmts, ok := d.GetOk("update.0.statements")
+	if ok {
+		ignore_update_stmt_warning := diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("The update statements are ignored during resource creation:\n\nStatements:\n\n  %s", updateStmts.(string)),
+		}
+		diags = append(diags, ignore_update_stmt_warning)
 	}
 
 	name, ok := d.GetOk("name")
@@ -158,7 +169,8 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 		d.SetId(id)
 	}
 
-	return resourceExecRead(ctx, d, m)
+	diags = append(diags, resourceExecRead(ctx, d, m)...)
+	return diags
 }
 
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

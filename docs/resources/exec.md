@@ -15,8 +15,6 @@ This basic example shows how to manage an arbitrary Snowflake object.
 
 ```terraform
 resource "snowsql_exec" "role" {
-  name = "my_role"
-
   create {
     statements = "CREATE ROLE IF NOT EXISTS my_role"
   }
@@ -39,8 +37,6 @@ This resource allows you to execute arbitrary SnowSQL queries and use the result
 
 ```terraform
 resource "snowsql_exec" "role" {
-  name = "my_role"
-
   create {
     statements = "CREATE ROLE IF NOT EXISTS my_role"
   }
@@ -114,10 +110,8 @@ resource "snowsql_exec" "role" {
 
 ```terraform
 resource "snowsql_exec" "role" {
-  name = local.name
-
   create {
-    statements = "CREATE ROLE IF NOT EXISTS ${local.name}"
+    statements = "CREATE ROLE IF NOT EXISTS my_role"
   }
 
   read {
@@ -125,11 +119,11 @@ resource "snowsql_exec" "role" {
   }
 
   update {
-    statements = "ALTER ROLE IF EXISTS ${local.name} SET COMMENT = 'updated with terraform'"
+    statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform'"
   }
 
   delete {
-    statements = "DROP ROLE IF EXISTS ${local.name}"
+    statements = "DROP ROLE IF EXISTS my_role"
   }
 }
 ```
@@ -254,7 +248,7 @@ resource "snowsql_exec" "function" {
 
 ## Argument Reference
 
-* `name` - (Required, Forces new resource) The name of the resource.
+* `name` - (Optional) The name of the resource. Defaults to random ID.
 * `create` - (Required, Forces new resource) Configuration block for create lifecycle statements. (see [below for nested schema](#nested-blocks---create-read-update-and-delete))
 * `read` - (Optional) Configuration block for read lifecycle statements. (see [below for nested schema](#nested-blocks---create-read-update-and-delete))
 * `update` - (Optional) Configuration block for in-place update lifecycle statements. (see [below for nested schema](###nested-blocks---create-read-update-and-delete))

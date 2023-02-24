@@ -85,8 +85,6 @@ Execute the update statements as an in-place Terraform change by adding or modif
 
 ```terraform
 resource "snowsql_exec" "role" {
-  name = "my_role"
-
   create {
     statements = "CREATE ROLE IF NOT EXISTS my_role"
   }

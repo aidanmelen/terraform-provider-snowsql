@@ -1,6 +1,4 @@
 resource "snowsql_exec" "role" {
-  name = "my_role"
-
   create {
     statements = "CREATE ROLE IF NOT EXISTS my_role"
   }

@@ -58,9 +58,9 @@ resource "snowflake_user" "user" {
 }
 
 resource "snowflake_user_ownership_grant" "grant" {
-	on_user_name                  = snowflake_user.user.name
-	to_role_name                  = "USERADMIN"
-	current_grants                = "COPY"
+  on_user_name                  = snowflake_user.user.name
+  to_role_name                  = "USERADMIN"
+  current_grants                = "COPY"
   revert_ownership_to_role_name = "ACCOUNTADMIN"
 }
 ```

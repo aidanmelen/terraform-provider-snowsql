@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/rs/xid"
 )
 
 var numberOfStatementsDescription = "The number of SnowSQL statements to be executed. This can help reduce the risk of SQL injection attacks. Defaults to `null` indicating that there is no limit on the number of statements (`0` and `-1` also indicate no limit)."
@@ -69,9 +70,17 @@ func resourceExec() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The name of the resource.",
+				Optional:    true,
+				ForceNew:    false,
+				Default:     nil,
+				Description: "The name of the resource. Defaults to random ID.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v == "" {
+						errs = append(errs, fmt.Errorf("%q cannot be an empty string", key))
+					}
+					return
+				},
 			},
 			"create": {
 				Type:        schema.TypeList,
@@ -132,6 +141,8 @@ func resourceExec() *schema.Resource {
 }
 
 func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	stmts := d.Get("create.0.statements").(string)
 	numOfStmts := d.Get("create.0.number_of_statements").(int)
 
@@ -141,10 +152,25 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 
-	name := d.Get("name").(string)
-	d.SetId(name)
+	updateStmts, ok := d.GetOk("update.0.statements")
+	if ok {
+		ignore_update_stmts_warning := diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("The update statements are ignored during resource creation and will not be executed until they are changed:\n\nStatements:\n\n  %s", updateStmts.(string)),
+		}
+		diags = append(diags, ignore_update_stmts_warning)
+	}
 
-	return resourceExecRead(ctx, d, m)
+	name, ok := d.GetOk("name")
+	if ok {
+		d.SetId(name.(string))
+	} else {
+		id := xid.New().String()
+		d.SetId(id)
+	}
+
+	diags = append(diags, resourceExecRead(ctx, d, m)...)
+	return diags
 }
 
 func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

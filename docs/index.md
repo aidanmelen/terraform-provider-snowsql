@@ -8,7 +8,35 @@ description: |-
 
 The `snowsql` provider allows for custom Terraform CRUD management of [Snowflake](https://www.snowflake.com) objects using [SnowSQL](https://docs.snowflake.com/en/user-guide/snowsql.html).
 
--> **NOTE:** This provider is not a drop in replacement This provider is not a drop in replacement for the robust resources implemented by [terraform-provider-snowflake](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs). For example, use the `snowflake_warehouse` resource if you need to create a virtual warehouse, Use this provider when you require fine grain control of [DCL](https://www.geeksforgeeks.org/sql-ddl-dql-dml-dcl-tcl-commands/) commands or to implement Snowflake objects that are unsupported by the Snowflake provider resources.
+-> **NOTE:** This provider is not a drop in replacement for the robust resources implemented by [terraform-provider-snowflake](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs). For example, use the `snowflake_warehouse` resource if you need to create a virtual warehouse, Use this provider when you require fine grain control of [DCL](https://www.geeksforgeeks.org/sql-ddl-dql-dml-dcl-tcl-commands/) commands or to implement Snowflake objects that are unsupported by the Snowflake provider resources.
+
+## Example Provider Configuration
+
+```terraform
+provider "snowsql" {
+  // required
+  username = "..."
+  account  = "..." # the Snowflake account identifier
+
+  // optional, exactly one must be set
+  password               = "..."
+  oauth_access_token     = "..."
+  private_key_path       = "..."
+  private_key            = "..."
+  private_key_passphrase = "..."
+  oauth_refresh_token    = "..."
+  oauth_client_id        = "..."
+  oauth_client_secret    = "..."
+  oauth_endpoint         = "..."
+  oauth_redirect_url     = "..."
+
+  // optional
+  region    = "..." # required if using legacy format for account identifier
+  role      = "..."
+  host      = "..."
+  warehouse = "..."
+}
+```
 
 ## Configuration Schema
 

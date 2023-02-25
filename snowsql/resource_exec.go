@@ -155,7 +155,7 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 	if !ok || stmts == "" {
 		d.Set("read", nil)
-		d.Set("read_results", nil)
+		d.Set("read_results", "null")
 		return nil
 	}
 
@@ -163,14 +163,14 @@ func resourceExecRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	results, err := snowflakeQueryWithMultiStatement(ctx, db, stmts, numOfStmts)
 	if err != nil {
 		d.Set("read", nil)
-		d.Set("read_results", nil)
+		d.Set("read_results", "null")
 		return diag.FromErr(fmt.Errorf("failed to process the results from the query.\n\nStatements:\n\n  %s\n\nResults:\n\n  %v\n\n%s", stmts, results, err))
 	}
 
 	marshalledResults, _ := json.Marshal(results)
 	if err != nil {
 		d.Set("read", nil)
-		d.Set("read_results", nil)
+		d.Set("read_results", "null")
 		return diag.FromErr(fmt.Errorf("failed to marshal query results to JSON.\n\nStatements:\n\n  %s\n\nResults:\n\n  %s\n\n%s", stmts, results, err))
 	}
 

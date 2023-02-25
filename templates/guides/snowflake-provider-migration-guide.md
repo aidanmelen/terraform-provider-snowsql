@@ -1,8 +1,7 @@
 ---
 page_title: "Migrating `snowsql_exec` resources to snowflake provider."
-subcategory: ""
 description: |-
-This guide explains how to migrate `snowsql_exec` resources to the Snowflake provider in Terraform.
+  This guide explains how to migrate `snowsql_exec` resources to the Snowflake provider in Terraform.
 ---
 
 This guide explains how to migrate `snowsql_exec` resources to the Snowflake provider in Terraform, specifically for granting ownership of a Snowflake user to a role.

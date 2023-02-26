@@ -4,91 +4,86 @@ description: |-
   This guide explains how to migrate `snowsql_exec` resources to the Snowflake provider in Terraform.
 ---
 
-This guide explains how to migrate `snowsql_exec` resources to the Snowflake provider in Terraform, specifically for granting ownership of a Snowflake user to a role.
+This guide provides step-by-step instructions for migrating SnowSQL resources to the Snowflake provider in Terraform, specifically for migrating a Snowflake user.
 
-## Step 1: Create a Snowflake User
+## Step 1: Create a Snowflake User with the SnowSQL Provider
 
-Start by creating a new Snowflake user with the `snowflake_user` resource:
+- Begin by creating a new Snowflake user using the `snowsql_exec` resource.
+- Add the following code to your Terraform file, which specifies the SnowSQL provider and creates a `snowsql_exec` resource:
 
 ```terraform
-provider "snowflake" {}
+terraform {
+  required_version = ">= 0.13.0"
 
-resource "snowflake_user" "user" {
-  name = "MY_USER"
+  required_providers {
+    snowsql = {
+      source  = "aidanmelen/snowsql"
+      version = ">= 1.3.1"
+    }
+  }
 }
-```
 
--> **Note** The ownership of the Snowflake user will be determined by [discretionary access control](https://docs.snowflake.com/en/user-guide/security-access-control-overview#access-control-framework).
-
-## Step 2: Grant Role Ownership using Snowsql
-
-For sake of example, let's assume that the [Snowflake provider does not yet support a resource for granting user ownership to a role](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/956) at the time of creation. We will need to use a custom `snowsql_exec` resource to grant user ownership to the `USERADMIN` role:
-
-```terraform
-provider "snowflake" {}
 provider "snowsql" {}
 
-resource "snowflake_user" "user" {
-  name = "MY_USER"
-}
-
-resource "snowsql_exec" "user_ownership_grant" {
-    name = "snowsql_user_ownership_grant"
+resource "snowsql_exec" "example_user" {
+    name = "my_user"
 
     create {
-        statements = "GRANT OWNERSHIP ON USER ${snowflake_user.user.name} TO ROLE SYSADMIN COPY CURRENT GRANTS;"
+        statements = <<-EOT
+          CREATE USER MY_USER 
+            WITH COMMENT = 'created with terraform-provider-snowsql';
+        EOT
+    }
+
+    read {
+      statements = "SHOW USERS LIKE 'MY_USER';"
     }
 
     delete {
-        statements = "GRANT OWNERSHIP ON USER ${snowflake_user.user.name} TO ROLE ACCOUNTADMIN COPY CURRENT GRANTS;"
+        statements = "DROP USER MY_USER;"
     }
 }
+
+output "user_comment" {
+  description = "The Snowflake user comment."
+  value       = lookup(jsondecode(nonsensitive(snowsql_exec.example_user.read_results))[0], "comment", null)
+}
 ```
 
-## Step 3: Use Snowflake Provider for User Ownership Grant
+- Run `terraform apply` to create the user and retrieve user information from Snowflake.
+- The output should display the user comment you specified in the `snowsql_exec` resource.
 
-Now that the [Snowflake provider supports a `snowflake_user_ownership_grant` resource](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/969), we can simplify the Terraform configuration by replacing the `snowsql_exec` resource with the new `snowflake_user_ownership_grant` resource:
+## Step 2: Migrate User to the Snowflake Provider
 
+Update the Terraform file to use the Snowflake provider and create a `snowflake_user` resource instead of the `snowsql_exec` resource:
 
 ```terraform
+terraform {
+  required_version = ">= 0.13.0"
+
+  required_providers {
+      snowflake = {
+      source  = "Snowflake-Labs/snowflake"
+      version = ">= 0.56.5"
+    }
+  }
+}
+
 provider "snowflake" {}
 
-resource "snowflake_user" "user" {
+resource "snowflake_user" "example" {
   name = "MY_USER"
+  comment = "created with terraform-provider-snowsql"
 }
 
-resource "snowflake_user_ownership_grant" "grant" {
-  on_user_name                  = snowflake_user.user.name
-  to_role_name                  = "USERADMIN"
-  current_grants                = "COPY"
-  revert_ownership_to_role_name = "ACCOUNTADMIN"
+output "user_comment" {
+  description = "The Snowflake user comment."
+  value       = snowflake_user.example.comment
 }
 ```
 
-Once you've updated the terraform, remove the old `snowsql_exec` resource from the Terraform state:
+- Remove the old `snowsql_exec` resource from the Terraform state by running `terraform state rm snowsql_exec.example_user`.
+- Import the new `snowflake_user` resource into the Terraform state by running `terraform import snowflake_user.example 'MY_USER'`.
+- Run `terraform apply` to output the original user comment from the `snowflake_user` resource.
 
-```console
-$ terraform state rm snowsql_exec.user_ownership_grant
-Removed snowsql_exec.user_ownership_grant
-Successfully removed 1 resource instance(s).
-```
-
-Next, import the new Snowflake provider resource using the following command:
-
-```console
-$ terraform import snowflake_user_ownership_grant.grant 'MY_USER|USERADMIN|COPY'
-```
-
-The output should confirm that the resource was imported successfully:
-
-```
-snowflake_user_ownership_grant.grant: Importing from ID "MY_USER|USERADMIN|COPY"...
-snowflake_user_ownership_grant.grant: Import prepared!
-  Prepared snowflake_user_ownership_grant for import
-snowflake_user_ownership_grant.grant: Refreshing state... [id=MY_USER|USERADMIN|COPY]
-
-Import successful!
-
-The resources that were imported are shown above. These resources are now in
-your Terraform state and will henceforth be managed by Terraform.
-```
+The migration is now complete.

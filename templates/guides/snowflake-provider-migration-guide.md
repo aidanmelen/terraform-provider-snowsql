@@ -46,7 +46,7 @@ resource "snowsql_exec" "example_user" {
 
 output "user_comment" {
   description = "The Snowflake user comment."
-  value       = lookup(jsondecode(nonsensitive(snowsql_exec.example_user.read_results))[0], "comment", null)
+  value       = jsondecode(nonsensitive(snowsql_exec.example_user.read_results))[0]["comment"]
 }
 ```
 

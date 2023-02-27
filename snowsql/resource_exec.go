@@ -152,15 +152,6 @@ func resourceExecCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 
-	updateStmts, ok := d.GetOk("update.0.statements")
-	if ok {
-		ignore_update_stmts_warning := diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  fmt.Sprintf("The update statements are ignored during resource creation and will not be executed until they are changed:\n\nStatements:\n\n  %s", updateStmts.(string)),
-		}
-		diags = append(diags, ignore_update_stmts_warning)
-	}
-
 	name, ok := d.GetOk("name")
 	if ok {
 		d.SetId(name.(string))

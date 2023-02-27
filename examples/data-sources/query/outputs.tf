@@ -17,4 +17,3 @@ output "select_snowflake_sample_data_tpch_sf1_lineitem" {
   description = "select complex query from snowflake_sample_data.tpch_sf1.lineitem."
   value       = jsondecode(nonsensitive(data.snowsql_query.select_snowflake_sample_data_tpch_sf1_lineitem.results))
 }
-

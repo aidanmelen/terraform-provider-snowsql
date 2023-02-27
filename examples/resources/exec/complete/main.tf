@@ -10,7 +10,7 @@ resource "snowsql_exec" "role_grant_all" {
   name = local.name
 
   create {
-    statements = <<-EOT
+    statements           = <<-EOT
       GRANT ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
       GRANT ALL PRIVILEGES ON ALL VIEWS IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
       GRANT ALL PRIVILEGES ON ALL FILE FORMATS IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
@@ -30,7 +30,7 @@ resource "snowsql_exec" "role_grant_all" {
   }
 
   read {
-    statements = <<-EOT
+    statements           = <<-EOT
       SHOW GRANTS TO ROLE ${local.name};
       SHOW FUTURE GRANTS TO ROLE ${local.name};
     EOT
@@ -38,7 +38,7 @@ resource "snowsql_exec" "role_grant_all" {
   }
 
   delete {
-    statements = <<-EOT
+    statements           = <<-EOT
       REVOKE ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
       REVOKE ALL PRIVILEGES ON ALL VIEWS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
       REVOKE ALL PRIVILEGES ON ALL FILE FORMATS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};

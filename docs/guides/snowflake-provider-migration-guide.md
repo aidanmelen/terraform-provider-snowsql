@@ -30,7 +30,7 @@ resource "snowsql_exec" "example_user" {
 
     create {
         statements = <<-EOT
-          CREATE USER MY_USER 
+          CREATE USER MY_USER
             WITH COMMENT = 'created with terraform-provider-snowsql';
         EOT
     }

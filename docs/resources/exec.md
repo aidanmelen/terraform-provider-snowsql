@@ -2,7 +2,7 @@
 page_title: "snowsql_exec Resource - terraform-provider-snowsql"
 subcategory: ""
 description: |-
-  
+
 ---
 
 # snowsql_exec (Resource)
@@ -126,7 +126,7 @@ resource "snowsql_exec" "role" {
 }
 ```
 
--> **NOTE:** The read statements will be queried not only during the initial Terraform apply and the Terraform refresh phase, but also any time the update statements are created or modified. This is beneficial because it allows you to retrieve the updated state of the Snowflake object and use the results in your infrastructure management. By doing so, you can ensure that your infrastructure remains in sync with the actual state of the Snowflake object. 
+-> **NOTE:** The read statements will be queried not only during the initial Terraform apply and the Terraform refresh phase, but also any time the update statements are created or modified. This is beneficial because it allows you to retrieve the updated state of the Snowflake object and use the results in your infrastructure management. By doing so, you can ensure that your infrastructure remains in sync with the actual state of the Snowflake object.
 
 ### Multi-Statements
 
@@ -145,7 +145,7 @@ resource "snowsql_exec" "role_grant_all" {
   name = local.name
 
   create {
-    statements = <<-EOT
+    statements           = <<-EOT
       GRANT ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
       GRANT ALL PRIVILEGES ON ALL VIEWS IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
       GRANT ALL PRIVILEGES ON ALL FILE FORMATS IN DATABASE ${snowflake_database.database.name} TO ROLE ${snowflake_role.role.name};
@@ -165,7 +165,7 @@ resource "snowsql_exec" "role_grant_all" {
   }
 
   read {
-    statements = <<-EOT
+    statements           = <<-EOT
       SHOW GRANTS TO ROLE ${local.name};
       SHOW FUTURE GRANTS TO ROLE ${local.name};
     EOT
@@ -173,7 +173,7 @@ resource "snowsql_exec" "role_grant_all" {
   }
 
   delete {
-    statements = <<-EOT
+    statements           = <<-EOT
       REVOKE ALL PRIVILEGES ON ALL TABLES IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
       REVOKE ALL PRIVILEGES ON ALL VIEWS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
       REVOKE ALL PRIVILEGES ON ALL FILE FORMATS IN DATABASE ${snowflake_database.database.name} FROM ROLE ${snowflake_role.role.name};
@@ -230,14 +230,14 @@ resource "snowsql_exec" "function" {
 
   read {
     statements = <<-EOT
-      SHOW USER FUNCTIONS LIKE 'js_factorial' 
+      SHOW USER FUNCTIONS LIKE 'js_factorial'
         IN DATABASE ${snowflake_database.database.name};
     EOT
   }
 
   delete {
     statements = <<-EOT
-      DROP FUNCTION IF EXISTS 
+      DROP FUNCTION IF EXISTS
         ${snowflake_database.database.name}.PUBLIC.js_factorial(FLOAT);
     EOT
   }

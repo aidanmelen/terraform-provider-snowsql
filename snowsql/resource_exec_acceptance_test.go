@@ -144,7 +144,7 @@ func readLifecycleBlockWithMultipleStatements(name string) string {
 		read {
 			statements = <<-EOT
 				SHOW ROLES LIKE '%s';
-				SHOW ROLES 
+				SHOW ROLES
 					LIKE 'SYSADMIN';
 			EOT
 		}

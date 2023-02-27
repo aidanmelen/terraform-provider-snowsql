@@ -4,7 +4,7 @@ resource "random_pet" "name" {
 }
 
 resource "random_password" "password" {
-  length = 16
+  length  = 16
   special = false
 }
 

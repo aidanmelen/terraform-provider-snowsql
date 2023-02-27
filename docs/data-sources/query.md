@@ -31,10 +31,10 @@ data "snowsql_query" "count_snowflake_sample_data_tables" {
 }
 
 # multi-line statement query
-data  "snowsql_query" "select_snowflake_sample_data_tpch_sf1_lineitem" {
+data "snowsql_query" "select_snowflake_sample_data_tpch_sf1_lineitem" {
   statements = <<-EOT
     // https://docs.snowflake.com/en/user-guide/sample-data-tpch#functional-query-definition
-    
+
     use schema snowflake_sample_data.tpch_sf1;
 
     select

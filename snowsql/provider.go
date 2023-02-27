@@ -164,6 +164,7 @@ func Provider() *schema.Provider {
 	}
 }
 
+// ConfigureProvider for SnowSQL
 func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	account := s.Get("account").(string)
 	user := s.Get("username").(string)

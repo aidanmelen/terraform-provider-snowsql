@@ -25,14 +25,14 @@ resource "snowsql_exec" "function" {
 
   read {
     statements = <<-EOT
-      SHOW USER FUNCTIONS LIKE 'js_factorial' 
+      SHOW USER FUNCTIONS LIKE 'js_factorial'
         IN DATABASE ${snowflake_database.database.name};
     EOT
   }
 
   delete {
     statements = <<-EOT
-      DROP FUNCTION IF EXISTS 
+      DROP FUNCTION IF EXISTS
         ${snowflake_database.database.name}.PUBLIC.js_factorial(FLOAT);
     EOT
   }

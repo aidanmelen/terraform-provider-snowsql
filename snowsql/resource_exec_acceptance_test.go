@@ -23,7 +23,7 @@ func TestAccLifecycles(t *testing.T) {
 					resource.TestCheckResourceAttr("snowsql_exec.role", "read.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "update.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s", accName)),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "read_results", ""),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "read_results", "null"),
 				),
 			},
 			{
@@ -45,7 +45,7 @@ func TestAccLifecycles(t *testing.T) {
 					resource.TestCheckResourceAttr("snowsql_exec.role", "read.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "update.%", "0"),
 					resource.TestCheckResourceAttr("snowsql_exec.role", "delete.0.statements", fmt.Sprintf("DROP ROLE IF EXISTS %s", accName)),
-					resource.TestCheckResourceAttr("snowsql_exec.role", "read_results", ""),
+					resource.TestCheckResourceAttr("snowsql_exec.role", "read_results", "null"),
 				),
 			},
 		},

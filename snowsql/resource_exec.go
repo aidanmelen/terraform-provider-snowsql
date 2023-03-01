@@ -228,7 +228,7 @@ func resourceExecDelete(ctx context.Context, d *schema.ResourceData, m interface
 	numOfStmts := d.Get("delete.0.number_of_statements").(int)
 
 	db := m.(*sql.DB)
-	err := snowflakeExecWithMultiStatement(ctx, db, "update", stmts, numOfStmts)
+	err := snowflakeExecWithMultiStatement(ctx, db, "delete", stmts, numOfStmts)
 	if err != nil {
 		return diag.FromErr(err)
 	}

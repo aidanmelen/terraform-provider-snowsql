@@ -23,6 +23,10 @@ func snowflakeExecWithMultiStatement(ctx context.Context, db *sql.DB, name strin
 }
 
 func snowflakeQueryWithMultiStatement(ctx context.Context, db *sql.DB, stmts string, numOfStmts int) ([]map[string]interface{}, error) {
+
+	// Please see the gosnowflake docs for more information on multiple statement queries.
+	// https://pkg.go.dev/github.com/snowflakedb/gosnowflake#hdr-Executing_Multiple_Statements_in_One_Call
+
 	multiStmtCtx, err := gosnowflake.WithMultiStatement(ctx, numOfStmts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build multiple statement context: %w", err)

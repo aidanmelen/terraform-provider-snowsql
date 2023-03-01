@@ -3,7 +3,7 @@ REGISTRY=registry.terraform.io
 HOSTNAME=aidanmelen
 NAME=snowsql
 BINARY=terraform-provider-${NAME}
-VERSION=1.3.2
+VERSION=1.3.3
 OS_ARCH=darwin_amd64
 
 .PHONY: help

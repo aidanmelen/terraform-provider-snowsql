@@ -18,7 +18,7 @@ terraform {
   required_providers {
     snowsql = {
       source  = "aidanmelen/snowsql"
-      version = ">= 1.3.2"
+      version = ">= 1.3.3"
     }
   }
 }

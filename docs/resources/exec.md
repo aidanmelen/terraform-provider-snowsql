@@ -2,7 +2,7 @@
 page_title: "snowsql_exec Resource - terraform-provider-snowsql"
 subcategory: ""
 description: |-
-
+  
 ---
 
 # snowsql_exec (Resource)
@@ -16,11 +16,11 @@ This basic example shows how to manage an arbitrary Snowflake object.
 ```terraform
 resource "snowsql_exec" "role" {
   create {
-    statements = "CREATE ROLE IF NOT EXISTS my_role"
+    statements = "CREATE ROLE my_role"
   }
 
   delete {
-    statements = "DROP ROLE IF EXISTS my_role"
+    statements = "DROP ROLE my_role"
   }
 }
 ```
@@ -38,7 +38,7 @@ This resource allows you to execute arbitrary SnowSQL queries and use the result
 ```terraform
 resource "snowsql_exec" "role" {
   create {
-    statements = "CREATE ROLE IF NOT EXISTS my_role"
+    statements = "CREATE ROLE my_role"
   }
 
   read {
@@ -46,7 +46,7 @@ resource "snowsql_exec" "role" {
   }
 
   delete {
-    statements = "DROP ROLE IF EXISTS my_role"
+    statements = "DROP ROLE my_role"
   }
 }
 
@@ -86,7 +86,7 @@ Execute the update statements as an in-place Terraform change by adding or modif
 ```terraform
 resource "snowsql_exec" "role" {
   create {
-    statements = "CREATE ROLE IF NOT EXISTS my_role"
+    statements = "CREATE ROLE my_role"
   }
 
   read {
@@ -95,11 +95,11 @@ resource "snowsql_exec" "role" {
 
   # uncomment to update role in-place
   # update {
-  #   statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform'"
+  #   statements = "ALTER ROLE my_role SET COMMENT = 'updated with terraform'"
   # }
 
   delete {
-    statements = "DROP ROLE IF EXISTS my_role"
+    statements = "DROP ROLE my_role"
   }
 }
 ```
@@ -109,7 +109,7 @@ resource "snowsql_exec" "role" {
 ```terraform
 resource "snowsql_exec" "role" {
   create {
-    statements = "CREATE ROLE IF NOT EXISTS my_role"
+    statements = "CREATE ROLE my_role"
   }
 
   read {
@@ -117,11 +117,11 @@ resource "snowsql_exec" "role" {
   }
 
   update {
-    statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform'"
+    statements = "ALTER ROLE my_role SET COMMENT = 'updated with terraform'"
   }
 
   delete {
-    statements = "DROP ROLE IF EXISTS my_role"
+    statements = "DROP ROLE my_role"
   }
 }
 ```
@@ -210,7 +210,7 @@ resource "snowsql_exec" "function" {
     statements = <<-EOT
       USE SCHEMA ${snowflake_database.database.name}.PUBLIC;
 
-      CREATE OR REPLACE FUNCTION js_factorial(d double)
+      CREATE FUNCTION js_factorial(d double)
         RETURNS double
         LANGUAGE JAVASCRIPT
         STRICT
@@ -236,10 +236,7 @@ resource "snowsql_exec" "function" {
   }
 
   delete {
-    statements = <<-EOT
-      DROP FUNCTION IF EXISTS
-        ${snowflake_database.database.name}.PUBLIC.js_factorial(FLOAT);
-    EOT
+    statements = "DROP FUNCTION ${snowflake_database.database.name}.PUBLIC.js_factorial(FLOAT);"
   }
 }
 ```
@@ -271,4 +268,18 @@ Import is supported using the following syntax:
 
 ```shell
 terraform import snowsql_exec.name name
+```
+
+However, since the default method only imports the object without controlling the read/refresh logic, it is recommended to use snowflake clauses to interact with existing objects, such as:
+
+```terraform
+resource "snowsql_exec" "role" {
+  create {
+    statements = "CREATE ROLE my_role"
+  }
+
+  delete {
+    statements = "DROP ROLE my_role"
+  }
+}
 ```

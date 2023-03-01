@@ -1,6 +1,6 @@
 resource "snowsql_exec" "role" {
   create {
-    statements = "CREATE ROLE IF NOT EXISTS my_role"
+    statements = "CREATE ROLE my_role"
   }
 
   read {
@@ -9,10 +9,10 @@ resource "snowsql_exec" "role" {
 
   # uncomment to update role in-place
   # update {
-  #   statements = "ALTER ROLE IF EXISTS my_role SET COMMENT = 'updated with terraform'"
+  #   statements = "ALTER ROLE my_role SET COMMENT = 'updated with terraform'"
   # }
 
   delete {
-    statements = "DROP ROLE IF EXISTS my_role"
+    statements = "DROP ROLE my_role"
   }
 }

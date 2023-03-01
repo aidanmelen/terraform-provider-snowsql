@@ -106,3 +106,7 @@ Import is supported using the following syntax:
 ```shell
 terraform import snowsql_exec.name name
 ```
+
+However, since the default method only imports the object without controlling the read/refresh logic, it is recommended to use snowflake clauses to interact with existing objects, such as:
+
+{{ tffile "examples/resources/exec/basic/.import.tf.docs" }}

@@ -1,6 +1,6 @@
 resource "snowsql_exec" "role" {
   create {
-    statements = "CREATE ROLE IF NOT EXISTS my_role"
+    statements = "CREATE ROLE my_role"
   }
 
   read {
@@ -8,7 +8,7 @@ resource "snowsql_exec" "role" {
   }
 
   delete {
-    statements = "DROP ROLE IF EXISTS my_role"
+    statements = "DROP ROLE my_role"
   }
 }
 

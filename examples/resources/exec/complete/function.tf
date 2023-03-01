@@ -5,7 +5,7 @@ resource "snowsql_exec" "function" {
     statements = <<-EOT
       USE SCHEMA ${snowflake_database.database.name}.PUBLIC;
 
-      CREATE OR REPLACE FUNCTION js_factorial(d double)
+      CREATE FUNCTION js_factorial(d double)
         RETURNS double
         LANGUAGE JAVASCRIPT
         STRICT
@@ -31,9 +31,6 @@ resource "snowsql_exec" "function" {
   }
 
   delete {
-    statements = <<-EOT
-      DROP FUNCTION IF EXISTS
-        ${snowflake_database.database.name}.PUBLIC.js_factorial(FLOAT);
-    EOT
+    statements = "DROP FUNCTION ${snowflake_database.database.name}.PUBLIC.js_factorial(FLOAT);"
   }
 }

@@ -38,22 +38,31 @@ func snowflakeQueryWithMultiStatement(ctx context.Context, db *sql.DB, stmts str
 	results := make([]map[string]interface{}, 0)
 	processRows := func(rows *sql.Rows) error {
 		for rows.Next() {
+
+			// Get the names of the columns in the current row
 			columns, err := rows.Columns()
 			if err != nil {
 				return err
 			}
+
+			// Create a slice to store the values in the current row
 			values := make([]interface{}, len(columns))
 			for i := range columns {
 				values[i] = new(interface{})
 			}
+
+			// Scan the current row's values into the `values` slice
 			err = rows.Scan(values...)
 			if err != nil {
 				return err
 			}
+
+			// Create a new map to store the current row's values, keyed by column name
 			rowMap := make(map[string]interface{})
 			for i, col := range columns {
 				rowMap[col] = *values[i].(*interface{})
 			}
+
 			results = append(results, rowMap)
 		}
 		if err := rows.Err(); err != nil {

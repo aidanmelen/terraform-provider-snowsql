@@ -107,6 +107,6 @@ Import is supported using the following syntax:
 terraform import snowsql_exec.name name
 ```
 
-However, since the default method only imports the object without controlling the read/refresh logic, it is recommended to use snowflake clauses to interact with existing objects, such as:
+However, we recommend using idempotent SnowSQL clauses when interacting with existing objects, such as:
 
 {{ tffile "examples/resources/exec/basic/.import.tf.docs" }}

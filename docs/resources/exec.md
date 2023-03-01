@@ -264,22 +264,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Import is supported using the following syntax:
+Import is partially supported using the following syntax:
 
 ```shell
 terraform import snowsql_exec.name name
 ```
 
-However, since the default method only imports the object without controlling the read/refresh logic, it is recommended to use snowflake clauses to interact with existing objects, such as:
+However, we recommend using idempotent SnowSQL clauses when interacting with existing objects, such as:
 
 ```terraform
 resource "snowsql_exec" "role" {
   create {
-    statements = "CREATE ROLE my_role"
+    statements = "CREATE ROLE IF NOT EXISTS my_role"
   }
 
   delete {
-    statements = "DROP ROLE my_role"
+    statements = "DROP ROLE IF EXISTS my_role"
   }
 }
 ```

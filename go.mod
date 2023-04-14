@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/Snowflake-Labs/terraform-provider-snowflake v0.54.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
-	github.com/rs/xid v1.4.0
+	github.com/rs/xid v1.5.0
 	github.com/snowflakedb/gosnowflake v1.6.18
 )
 

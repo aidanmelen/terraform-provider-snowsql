@@ -67,6 +67,8 @@ data "snowsql_query" "select_snowflake_sample_data_tpch_sf1_lineitem" {
 
 -> **NOTE:** The query statements are executed and the resulting row(s) are processed in the same way as the [`snowsql_exec` read](https://registry.terraform.io/providers/aidanmelen/snowsql/latest/docs/resources/exec#query-snowflake-with-read-statements) statements.
 
+~> **NOTE:** The query statements must be fully qualified. `USE` is not supported.
+
 ## Argument Reference
 
 * `name` - (Required) The name of the resource.

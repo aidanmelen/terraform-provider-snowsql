@@ -65,8 +65,6 @@ data "snowsql_query" "select_snowflake_sample_data_tpch_sf1_lineitem" {
 
 -> **NOTE:** It is highly recommended to test all SnowSQL query statements in a [Snowflake worksheet](https://docs.snowflake.com/en/user-guide/ui-worksheet) prior to executing them. This can help avoid any unexpected issues during the execution of these statements.
 
--> **NOTE:** The query statements are executed and the resulting row(s) are processed in the same way as the [`snowsql_exec` read](https://registry.terraform.io/providers/aidanmelen/snowsql/latest/docs/resources/exec#query-snowflake-with-read-statements) statements.
-
 ~> **NOTE:** The query statements must be fully qualified. `USE` is not supported.
 
 ## Argument Reference

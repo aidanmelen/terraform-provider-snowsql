@@ -77,6 +77,8 @@ show_role_results = [
 ]
 ```
 
+~> **NOTE:** Read queries must be fully qualified. `USE` is not supported.
+
 ### Avoiding Replacement With Update Lifecycle
 
 Execute the update statements as an in-place Terraform change by adding or modifying them after the initial Terraform apply. However, if there are any changes to the create statements, the resource will need to be replaced.
